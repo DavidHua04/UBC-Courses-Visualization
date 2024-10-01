@@ -1,2 +1,5 @@
 # data_science
-Repository for Data Science Learning
+## Arthor: David
+**Repository for Data Science Learning**
+Containing following stuff:
+- learning resourses for courses in UBC
