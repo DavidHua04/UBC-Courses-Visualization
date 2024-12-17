@@ -16,7 +16,7 @@ Additionally, the repository features a small user interface that allows you to 
 
 Currently, all course objects in this repository have been extracted using GPT, focusing on **Computer Science (CS)**, **Statistics (STAT)**, and **Mathematics (MATH)** courses. However, there are a few important points to consider:
 
-1. **Limited Scope:** Only CS, STAT, and a few MATH courses are included in the visualization. Alternative courses that could be prerequisites for these courses may not be shown.
+1. **Limited Scope:** Only CS, STAT, and a few MATH courses in UBC are included in the visualization. Alternative courses that could be prerequisites for these courses may not be shown. User can add the course subject they want at `Course List` part to enable this project to work for not-included courses.
 2. **Potential Hallucinations:** Since the course data has been generated using GPT, there may be occasional errors or hallucinated information in the course details. This could lead to minor inaccuracies in prerequisites or course descriptions.
    
 To improve the accuracy and breadth of the course data, **users are encouraged to review the existing course information** for any potential errors and **add more courses** or **suggest corrections**. Your contributions will help make the visualization more accurate and comprehensive.
