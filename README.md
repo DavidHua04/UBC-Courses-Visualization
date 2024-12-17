@@ -12,6 +12,15 @@ Additionally, the repository features a small user interface that allows you to 
 **Prerequisite Visualization in Browser:**
 ![Prerequisite Visualization](https://github.com/user-attachments/assets/e6f2b357-c40e-4223-bec4-2ef5d75ee984)
 
+### Limitations and User Contribution
+
+Currently, all course objects in this repository have been extracted using GPT, focusing on **Computer Science (CS)**, **Statistics (STAT)**, and **Mathematics (MATH)** courses. However, there are a few important points to consider:
+
+1. **Limited Scope:** Only CS, STAT, and a few MATH courses are included in the visualization. Alternative courses that could be prerequisites for these courses may not be shown.
+2. **Potential Hallucinations:** Since the course data has been generated using GPT, there may be occasional errors or hallucinated information in the course details. This could lead to minor inaccuracies in prerequisites or course descriptions.
+   
+To improve the accuracy and breadth of the course data, **users are encouraged to review the existing course information** for any potential errors and **add more courses** or **suggest corrections**. Your contributions will help make the visualization more accurate and comprehensive.
+
 ## Future Plans
 
 I will be adding another Jupyter Notebook (`.ipynb` file) that will provide the following features:
