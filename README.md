@@ -2,6 +2,8 @@
 
 This repository provides a comprehensive visualization of all required **Computer Science (CS)**, **Statistics (STAT)**, and **Mathematics (MATH)** courses at the University of British Columbia (UBC). The visualization is created using Markdown with Mermaid diagrams in a Jupyter Notebook (`.ipynb` file), offering an easy-to-follow overview of course structures, prerequisites, and relationships.
 
+Besides, it also contain a small user interface that you can type the course code to get a visualization of all prerequisites.
+
 ## Features
 
 - **Mermaid Markdown Diagrams**: Interactive flowcharts show the prerequisite relationships between UBC CS, STAT, and MATH courses.
