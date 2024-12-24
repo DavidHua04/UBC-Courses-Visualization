@@ -1,8 +1,17 @@
 # UBC-Courses-Visualization
 
-This repository provides a comprehensive visualization of all required **Computer Science (CS)**, **Statistics (STAT)**, and **Mathematics (MATH)** courses at the University of British Columbia (UBC). The visualization is created using Markdown with Mermaid diagrams in a Jupyter Notebook (`.ipynb` file), offering an easy-to-follow overview of course structures, prerequisites, and relationships.
+This repository provides the following functions:
+## 1. Course Searching
 
-Additionally, the repository features a small user interface that allows you to input a course code and view a visualization of its prerequisites. For example, by entering **CPSC 410**, users can see the full list of prerequisites.
+Search for all courses that contain specific string in the name of the courses
+
+## 2. Course Planning
+
+Given the course list that you need to take(Major Courses + Other courses you want), the course list of courses you have already taken and the maximum of credit you want to take per term, produce a reasonable course arrangement.
+
+## 3. Course Prerequisites Visualization
+
+Feature a small user interface that allows you to input a course code and view a visualization of its prerequisites. For example, by entering **CPSC 410**, users can see the full list of prerequisites.
 
 ### Example User Interface:
 
