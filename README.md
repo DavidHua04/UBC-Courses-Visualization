@@ -43,6 +43,8 @@ Stay tuned for this upcoming feature to expand the course visualization beyond U
 UBC-Courses-Visualization/
 ├── README.md         # This file
 ├── UBC_Courses.ipynb # Main Jupyter Notebook containing Mermaid diagrams
+├── DynamicCourseVisualizerSetup.ipynB
+├── LICENSE           # Standard MIT LICENSE
 └── .gitignore        # Standard Git ignore file
 ```
 
