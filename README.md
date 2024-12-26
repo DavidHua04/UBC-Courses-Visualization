@@ -32,16 +32,6 @@ To improve the accuracy and breadth of the course data, **users are encouraged t
 
 ## Future Plans
 
-Plan 1:
-
-I will be adding another Jupyter Notebook (`.ipynb` file) that will provide the following features:
-
-1. **Web Crawler:** A code block that prompts users to input their university's course description website and extracts all the text from that page.
-2. **Course Information Extraction:** A code block that utilizes a large language model's API to analyze the extracted text and organize the course information into a structured format.
-3. **Course Object Creation:** A final code block that converts the organized course data into corresponding **Course** objects, which can then be imported into the current visualization system. This will allow users to generate course visualizations for universities other than UBC, based on their own course description websites.
-
-Plan 2:
-
 Turn this tool into website.
 
 Stay tuned for this upcoming feature to expand the course visualization beyond UBC!
