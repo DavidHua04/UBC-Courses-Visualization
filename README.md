@@ -46,11 +46,25 @@ Stay tuned for this upcoming feature to expand the course visualization beyond U
 
 ```
 UBC-Courses-Visualization/
-├── README.md         # This file
-├── UBC_Courses.ipynb # Main Jupyter Notebook containing Mermaid diagrams
-├── DynamicCourseVisualizerSetup.ipynB
-├── LICENSE           # Standard MIT LICENSE
-└── .gitignore        # Standard Git ignore file
+├── backend/                    # Backend service (Flask)
+│   ├── app.py                  # Main Flask application
+│   ├── requirements.txt        # Backend dependencies
+│   └── config.py               # Configuration settings (optional)
+├── frontend/                   # Frontend application (React)
+│   ├── public/
+│   │   └── index.html          # Main HTML file
+│   ├── src/
+│   │   ├── components/         # Reusable React components
+│   │   │   ├── CourseSearch.js # Component for course search
+│   │   │   ├── Planner.js      # Component for course planning
+│   │   │   └── Visualizer.js   # Component for prerequisite visualization
+│   │   ├── App.js              # Main React app
+│   │   ├── index.js            # Entry point for React
+│   │   └── App.css             # Global styles
+│   ├── package.json            # Frontend dependencies
+├── README.md                   # Documentation for the project
+├── LICENSE                     # Standard MIT LICENSE
+└── .gitignore                  # Files to ignore in Git
 ```
 
 ## Getting Started
