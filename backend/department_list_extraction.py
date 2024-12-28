@@ -11,4 +11,7 @@ def fetch_department_list():
     return df_courses[["dept","cred"]].groupby("dept").mean().reset_index()["dept"].tolist()
 
 department_list = fetch_department_list()
-print(department_list)
+
+
+if __name__ == '__main__':
+    print(department_list)
