@@ -1,0 +1,104 @@
+body {
+        font-family: 'Lora', serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        color: #333;
+    }
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    header {
+        text-align: center;
+        padding: 50px 0;
+        background-color: #fff;
+        border-bottom: 1px solid #ddd;
+    }
+    header img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+    }
+    header h1 {
+        font-size: 2.5em;
+        margin: 10px 0;
+        color: #333;
+        font-family: 'Montserrat', sans-serif;
+    }
+    header p {
+        font-size: 1.2em;
+        margin: 5px 0;
+        color: #777;
+    }
+    section {
+        background: #fff;
+        margin: 20px 0;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+        color: #333;
+        font-size: 2.0em;
+        font-family: 'Montserrat', sans-serif;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+    h3 {
+        color: #333; /* Adjust text color */
+        font-size: 1.5em; /* Slightly smaller than <h2> */
+        font-family: 'Montserrat', sans-serif;
+        margin-top: 20px; /* Space above the heading */
+        margin-bottom: 10px; /* Space below the heading */
+        border-bottom: 1px solid #ddd; /* Optional: Add an underline */
+        padding-bottom: 5px; /* Optional: Add padding to separate underline */
+    }
+    
+    ul {
+        list-style-type: none;
+        padding-left: 0;
+        line-height: 1.7;
+        font-size: 1.0em;
+        font-family: 'Roboto', sans-serif;
+    }
+    ul li {
+        font-size: 1.0em;
+        margin: 10px 0;
+        padding-left: 20px;
+        position: relative;
+        line-height: 1.7;
+        font-family: 'Roboto', sans-serif;
+    }
+    ul li:before {
+        content: "•";
+        color: #1a73e8;
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+    a {
+        color: #1a73e8;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+    footer {
+        text-align: center;
+        padding: 20px;
+        margin-top: 20px;
+        background-color: #333;
+        color: #fff;
+    }
+    /* About section styles */
+    .about-text {
+        font-size: 1.1em;
+        line-height: 1.8;
+        margin-bottom: 20px;
+    }
