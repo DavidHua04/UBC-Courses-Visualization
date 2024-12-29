@@ -218,3 +218,46 @@
    - Links: Course Prerequisites Visualization Page, Personal Profile Page, Guest Home Page.
 
 ---
+```mermaid
+graph TD
+    HomePage[Home Page]
+    SignInPage[Sign In Page]
+    SignUpPage[Sign Up Page]
+    GuestHomePage[Guest Home Page]
+    ProfilePage[Personal Profile Page]
+    PrereqPage[Course Prerequisites Visualization Page]
+    SearchResultsPage[Course Search Results Page]
+    CourseDetailsPage[Detailed Course Page]
+
+    HomePage --> SignInPage
+    HomePage --> SignUpPage
+    HomePage --> GuestHomePage
+    HomePage --> PrereqPage
+    HomePage --> SearchResultsPage
+
+    GuestHomePage --> SignInPage
+    GuestHomePage --> SignUpPage
+    GuestHomePage --> PrereqPage
+    GuestHomePage --> SearchResultsPage
+
+    SignInPage --> ProfilePage
+    SignInPage --> GuestHomePage
+
+    SignUpPage --> SignInPage
+    SignUpPage --> HomePage
+
+    ProfilePage --> HomePage
+    ProfilePage --> PrereqPage
+    ProfilePage --> SearchResultsPage
+
+    PrereqPage --> HomePage
+    PrereqPage --> ProfilePage
+    PrereqPage --> GuestHomePage
+
+    SearchResultsPage --> HomePage
+    SearchResultsPage --> CourseDetailsPage
+
+    CourseDetailsPage --> PrereqPage
+    CourseDetailsPage --> ProfilePage
+    CourseDetailsPage --> GuestHomePage
+```
