@@ -37,8 +37,12 @@ Prerequisite can show the following types of requirements and their combination:
     
     5. Major Restriction:
         ```
-        Prerequisite(type="major", details="Integrated Sciences")
+        Prerequisite(type="major", details={
+            "major": "Atmospheric Science",
+            "honor": False # False means do not require honor
+        })
         ```
+            Any # Any means any major can choose, put this when it only need a honor major
             Astronomy
             Atmospheric Science
             Biochemistry
