@@ -32,7 +32,7 @@ Prerequisite can show the following types of requirements and their combination:
     
     4. Specific academic year standing requirements:
         ```
-        Prerequisite(type="standing", details="fourth_year")
+        Prerequisite(type="standing", details=4)
         ```
     
     5. Major Restriction:
