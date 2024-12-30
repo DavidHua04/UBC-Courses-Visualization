@@ -69,11 +69,22 @@ Prerequisite can show the following types of requirements and their combination:
             Physics
             Statistics
     
-    6. Combinations of multiple conditions:
+    6. Course Score Requirement:
         ```
         Prerequisite(type="score", details={
             "course": "CPSC 221",
             "min_score": 65,  # Score threshold in percentage
+        })
+        ```
+    
+    7. Approval Requirement:
+        ```
+        Prerequisite(type="approval", details={
+            "Approver":"Professor"
+        })
+
+        Prerequisite(type="approval", details={
+            "Approver":"Advisor"
         })
         ```
 
