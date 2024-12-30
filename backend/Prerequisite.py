@@ -37,8 +37,33 @@ Prerequisite can show the following types of requirements and their combination:
     
     5. Major Restriction:
         ```
-        Prerequisite(type="major", details="computer_science")
+        Prerequisite(type="major", details="Integrated Sciences")
         ```
+            Astronomy
+            Atmospheric Science
+            Biochemistry
+            Biology
+            Biotechnology
+            Cellular, Anatomical + Physiological Sciences
+            Chemistry
+            Cognitive Systems: Cognition and Brain
+            Cognitive Systems: Computational Intelligence + Design
+            Computer Science
+            Earth and Ocean Sciences
+            Environmental Sciences
+            Fisheries Oceanography
+            Geographical Sciences
+            Geology
+            Geophysics
+            Integrated Sciences
+            Mathematics
+            Mathematical Sciences
+            Microbiology and Immunology
+            Neuroscience
+            Pharmacology
+            Physics
+            Physics
+            Statistics
     
     6. Combinations of multiple conditions:
         ```
@@ -80,7 +105,7 @@ class Prerequisite:
     def __init__(self, type, details=None, children=None):
         """
         :param type: Type of prerequisite, e.g., "course", "all_of", "one_of", "credits", "standing", "major".
-        :param details: Specific details (e.g., course code, major name, credit count).
+        :param details: Specific details (e.g., course code name, credit count).
         :param children: List of child Prerequisite objects for nested conditions.
         """
         self.type = type
