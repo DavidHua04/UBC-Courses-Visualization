@@ -1,3 +1,4 @@
 Problem:
 1. There are courses which credit is null.
 2. The API do not show the one-of relationship. Like if a course need knowledge from two courses and one of the courses is replaceable and have another alternative, the API just list all of the three course, which do not represent the correct order. The data structure of prerequisite can be represent by using a nested list but we need to get correct information to build that nested list.
+3.  Some of the department are not read successfully, need to look back and handle them latter
