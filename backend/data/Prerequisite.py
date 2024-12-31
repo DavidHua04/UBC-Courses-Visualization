@@ -67,9 +67,54 @@ Prerequisite can show the following types of requirements and their combination:
                 Neuroscience
                 Pharmacology
                 Physics
-                Physics
                 Statistics
-            Art # All art major can choose
+            
+            Art
+                Psychology
+                Economics
+                Sociology
+                History
+                Political Science
+                Philosophy
+                Media Studies
+                Music
+                Social Work
+            
+            Applied Science
+                Civil Engineering
+                Electrical Engineering
+                Mechanical Engineering
+                Chemical and Biological Engineering
+                Nursing
+                Architecture
+            
+            Business
+                Commerce
+
+            Education
+                Educational and Counseling Psychology
+                Special Education
+                Kinesiology
+
+            Forestry
+                Forest Resources Management
+                Wood Science
+                Forest Conservation Sciences
+            
+            Land and Food Systems
+                Food, Nutrition and Health
+                Applied Biology
+                Food and Resource Economics
+            
+            Medicine
+                Medical Genetics
+                Physical Therapy
+                Occupational Science
+                Pharmacy
+            
+            Pharmaceutical Sciences
+                Pharmacology
+                Pharmaceutical Sciences
     
     6. Course Score Requirement:
         ```
