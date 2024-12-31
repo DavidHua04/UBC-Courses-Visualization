@@ -43,31 +43,33 @@ Prerequisite can show the following types of requirements and their combination:
         })
         ```
             Any # Any means any major can choose, put this when it only need a honor major
-            Astronomy
-            Atmospheric Science
-            Biochemistry
-            Biology
-            Biotechnology
-            Cellular, Anatomical + Physiological Sciences
-            Chemistry
-            Cognitive Systems: Cognition and Brain
-            Cognitive Systems: Computational Intelligence + Design
-            Computer Science
-            Earth and Ocean Sciences
-            Environmental Sciences
-            Fisheries Oceanography
-            Geographical Sciences
-            Geology
-            Geophysics
-            Integrated Sciences
-            Mathematics
-            Mathematical Sciences
-            Microbiology and Immunology
-            Neuroscience
-            Pharmacology
-            Physics
-            Physics
-            Statistics
+            Science # All science major can choose
+                Astronomy
+                Atmospheric Science
+                Biochemistry
+                Biology
+                Biotechnology
+                Cellular, Anatomical + Physiological Sciences
+                Chemistry
+                Cognitive Systems: Cognition and Brain
+                Cognitive Systems: Computational Intelligence + Design
+                Computer Science
+                Earth and Ocean Sciences
+                Environmental Sciences
+                Fisheries Oceanography
+                Geographical Sciences
+                Geology
+                Geophysics
+                Integrated Sciences
+                Mathematics
+                Mathematical Sciences
+                Microbiology and Immunology
+                Neuroscience
+                Pharmacology
+                Physics
+                Physics
+                Statistics
+            Art # All art major can choose
     
     6. Course Score Requirement:
         ```
