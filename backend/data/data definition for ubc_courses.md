@@ -55,32 +55,32 @@ Prerequisite(type="major", details={
 ```
 
 major choice:             
-    - Any # Any means any major can choose, put this when it only need a honor major
-    - Astronomy
-    - Atmospheric Science
-    - Biochemistry
-    - Biology
-    - Biotechnology
-    - Cellular, Anatomical + Physiological Sciences
-    - Chemistry
-    - Cognitive Systems: Cognition and Brain
-    - Cognitive Systems: Computational Intelligence + Design
-    - Computer Science
-    - Earth and Ocean Sciences
-    - Environmental Sciences
-    - Fisheries Oceanography
-    - Geographical Sciences
-    - Geology
-    - Geophysics
-    - Integrated Sciences
-    - Mathematics
-    - Mathematical Sciences
-    - Microbiology and Immunology
-    - Neuroscience
-    - Pharmacology
-    - Physics
-    - Physics
-    - Statistics
+- Any # Any means any major can choose, put this when it only need a honor major
+- Astronomy
+- Atmospheric Science
+- Biochemistry
+- Biology
+- Biotechnology
+- Cellular, Anatomical + Physiological Sciences
+- Chemistry
+- Cognitive Systems: Cognition and Brain
+- Cognitive Systems: Computational Intelligence + Design
+- Computer Science
+- Earth and Ocean Sciences
+- Environmental Sciences
+- Fisheries Oceanography
+- Geographical Sciences
+- Geology
+- Geophysics
+- Integrated Sciences
+- Mathematics
+- Mathematical Sciences
+- Microbiology and Immunology
+- Neuroscience
+- Pharmacology
+- Physics
+- Physics
+- Statistics
 
 #### Course Score Requirement:
 ```
