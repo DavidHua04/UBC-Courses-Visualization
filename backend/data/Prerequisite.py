@@ -68,6 +68,7 @@ Prerequisite can show the following types of requirements and their combination:
                 Pharmacology
                 Physics
                 Statistics
+                Rehabilitation Sciences
             
             Art
                 Psychology
@@ -87,6 +88,7 @@ Prerequisite can show the following types of requirements and their combination:
                 Chemical and Biological Engineering
                 Nursing
                 Architecture
+                Applied Biology
             
             Business
                 Commerce
