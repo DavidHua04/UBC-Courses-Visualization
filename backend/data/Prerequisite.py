@@ -34,6 +34,7 @@ Prerequisite can show the following types of requirements and their combination:
         ```
         Prerequisite(type="standing", details=4)
         ```
+        Year standing that more than 5 means Graduate Students(Master/phd)
     
     5. Major Restriction:
         ```
