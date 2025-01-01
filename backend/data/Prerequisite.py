@@ -136,6 +136,10 @@ Prerequisite can show the following types of requirements and their combination:
         Prerequisite(type="approval", details={
             "Approver":"Advisor"
         })
+
+    8. Special Requirement:
+        ```
+        Prerequisite(type="special",, details={})
         ```
 
 Nested Conditions(Combinations of multiple conditions):
