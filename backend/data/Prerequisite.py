@@ -25,7 +25,7 @@ Prerequisite can show the following types of requirements and their combination:
         Prerequisite(type="credits", details={
             "min_credits": 3,
             "courses": ["COMM 291", "BIOL 300"],
-            "beyond_course": "STAT 200"
+            "beyond_course": "STAT 200"  # beyond_course means this course is excluded when calculating the credit we need to fullfil this prerequisite
             "departments": ["MATH", "STAT"],
             "level": 200,
         })
