@@ -139,7 +139,7 @@ Prerequisite can show the following types of requirements and their combination:
 
     8. Special Requirement:
         ```
-        Prerequisite(type="special",, details={})
+        Prerequisite(type="special",, details="previous course in qualitative research")
         ```
 
 Nested Conditions(Combinations of multiple conditions):
