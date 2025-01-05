@@ -1,0 +1,130 @@
+/* Light Theme (default) */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.container {
+  width: 80%;
+  margin: 20px auto 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #002145;
+}
+
+p {
+  color: #666;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #002145;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #00172e;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #002145;
+  z-index: 999;
+  border-bottom: 2px solid #fff;
+}
+
+.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.navbar li {
+  display: inline;
+}
+
+.navbar a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 20px;
+  text-decoration: none;
+}
+
+.navbar a:hover {
+  background-color: #00172e;
+  color: white;
+}
+
+.navbar .toggle-theme-button {
+  border-radius: 0px;
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 20px;
+  text-decoration: none;
+}
+
+.toggle-theme-button {
+  padding: 14px 20px;
+  font-size: 16px;
+  border: none;
+}
+
+/* Dark Theme */
+body.dark-theme {
+  background-color: #002145;
+  color: #fff;
+}
+
+body.dark-theme .container {
+  background-color: #00172e;
+  color: #fff;
+}
+
+body.dark-theme h1 {
+  color: #fff;
+}
+
+body.dark-theme p {
+  color: #ccc;
+}
+
+body.dark-theme button {
+  background-color: #00172e;
+}
+
+body.dark-theme button:hover {
+  background-color: #002145;
+}
+
+body.dark-theme .navbar {
+  background-color: #00172e;
+  border-bottom: 2px solid #fff;
+}
+
+body.dark-theme .navbar a {
+  color: #fff;
+}
+
+body.dark-theme .navbar a:hover {
+  background-color: #002145;
+  color: #fff;
+}
+

@@ -1,0 +1,164 @@
+/* Light Theme (default) */
+:root {
+  --background-color: #f0f0f0;
+  --container-background: #fff;
+  --text-color: #000;
+  --heading-color: #002145;
+  --paragraph-color: #666;
+  --input-background: #fff;
+  --input-border: #ccc;
+  --input-text: #000;
+  --button-background: #002145;
+  --button-hover: #002145;
+  --button-text: #fff;
+  --box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-theme {
+  --background-color: #002145;
+  --container-background: #00172e;
+  --text-color: #fff;
+  --heading-color: #fff;
+  --paragraph-color: #ccc;
+  --input-background: #00172e;
+  --input-border: #444;
+  --input-text: #fff;
+  --button-background: #00172e;
+  --button-hover: #002145;
+  --button-text: #fff;
+  --box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Course Search Page Styles */
+.course-search-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.course-search-container h1 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  margin-top: 40px;
+}
+
+.search-bar {
+  display: flex;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 5px 0 0 5px;
+  background-color: var(--input-background);
+  color: var(--input-text);
+  font-size: 16px;
+}
+
+.search-bar button {
+  padding: 10px 20px;
+  background-color: var(--button-background);
+  color: var(--button-text);
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-size: 16px;
+  border: 1px solid #fff;
+}
+
+.search-bar button:hover {
+  background-color: var(--button-hover);
+}
+
+.filter-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.filter-container .dropdown {
+  margin: 0 10px;
+}
+
+.filter-container .dropdown button {
+  padding: 10px 20px;
+  background-color: var(--button-background);
+  color: var(--button-text);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border: 1px solid #fff;
+}
+
+.filter-container .dropdown button:hover {
+  background-color: var(--button-hover);
+}
+
+.filter-container .dropdown-content {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--container-background);
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  padding: 10px;
+  position: absolute;
+  z-index: 1;
+}
+
+.filter-container .dropdown-content label {
+  margin-bottom: 5px;
+}
+
+.course-results {
+  width: 100%;
+  max-width: 900px;
+  margin-top: 20px;
+}
+
+.course-results .course-item {
+  background-color: var(--container-background);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: var(--box-shadow);
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.course-results .course-item:hover {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  background-color: var(--button-hover);
+  color: var(--button-text);
+}
+
+.course-results .course-item h2 {
+  color: inherit;
+  margin-bottom: 10px;
+}
+
+.course-results .course-item p {
+  color: inherit;
+  margin-bottom: 10px;
+}
+
+.course-results .course-item a {
+  color: var(--heading-color);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.course-results .course-item a:hover {
+  text-decoration: underline;
+}

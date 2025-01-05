@@ -1,0 +1,100 @@
+/* Light Theme (default) */
+:root {
+  --background-color: #f0f0f0;
+  --container-background: #fff;
+  --text-color: #000;
+  --heading-color: #002145;
+  --paragraph-color: #666;
+  --input-background: #fff;
+  --input-border: #ccc;
+  --input-text: #000;
+  --button-background: #002145;
+  --button-hover: #00172e;
+  --button-text: #fff;
+  --box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  --button-border: 1px solid #002145;
+}
+
+body.dark-theme {
+  --background-color: #002145;
+  --container-background: #00172e;
+  --text-color: #fff;
+  --heading-color: #fff;
+  --paragraph-color: #ccc;
+  --input-background: #00172e;
+  --input-border: #444;
+  --input-text: #fff;
+  --button-background: #00172e;
+  --button-hover: #002145;
+  --button-text: #fff;
+  --box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  --button-border: 1px solid #fff;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Form Container Styles */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+}
+
+.form-container form {
+  background-color: var(--container-background);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: var(--box-shadow);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.form-container label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 16px;
+  width: 100%;
+  text-align: left;
+}
+
+.form-container input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  background-color: var(--input-background);
+  color: var(--input-text);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-container input[type="text"],
+.form-container input[type="password"] {
+  margin-top: 10px;
+}
+
+.form-container button {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--button-background);
+  color: var(--button-text);
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  border: 1px solid #fff;
+}
+
+.form-container button:hover {
+  background-color: var(--button-hover);
+}
