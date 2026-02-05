@@ -1,8 +1,0 @@
-Problem:
-1. There are courses which credit is null.
-
-
-To do:
-1. Equivalency courses list
-2. More major in other faculties than science (bcz there are so many major and our list only cover science and those normal major in other faculties like Econ(Art), I will check if there is major not in the list)
-3. Enter major information data/Graduate requirement data
