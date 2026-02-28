@@ -1,6 +1,7 @@
 # UBC Degree Planner
 
 A web application that helps UBC students build, validate, and visualize multi-year degree plans. Students can test "what-if" scenarios, track prerequisite requirements in real time, and see a clear map of their academic progress toward graduation.
+Note: I am currently working on rebuilding the project with more industrial related technique. I am switching the testing from chai to vitest, using PostgreSQL and redis to replace local json storage and restructure the whole design so it support more complex prerequisite tracking.
 
 ## Features
 
