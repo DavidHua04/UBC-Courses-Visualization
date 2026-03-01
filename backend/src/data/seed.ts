@@ -456,8 +456,8 @@ export async function runSeed(db: { execute: (query: any) => Promise<any> }): Pr
           ${course.credits},
           ${course.description},
           ${course.prerequisites ? JSON.stringify(course.prerequisites) : null}::jsonb,
-          ${course.corequisites}::text[],
-          ${course.termsOffered}::text[]
+          ${'{' + course.corequisites.join(',') + '}'}::text[],
+          ${'{' + course.termsOffered.join(',') + '}'  }::text[]
         )
         ON CONFLICT (id) DO UPDATE SET
           dept = EXCLUDED.dept,

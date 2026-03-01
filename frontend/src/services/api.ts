@@ -16,15 +16,16 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 // Courses
-export const getCourses = (search?: string): Promise<CourseRow[]> => {
-  const params = search ? `?search=${encodeURIComponent(search)}` : '';
-  return request(`${BASE}/courses${params}`);
+export const getCourses = async (search?: string): Promise<CourseRow[]> => {
+  const params = search ? `?q=${encodeURIComponent(search)}` : '';
+  const res = await request<{ data: CourseRow[] }>(`${BASE}/courses${params}`);
+  return res.data;
 };
 
 export const getCourse = (id: string): Promise<CourseRow> =>
   request(`${BASE}/courses/${id}`);
 
-export const seedCourses = (): Promise<{ inserted: number }> =>
+export const seedCourses = (): Promise<{ message: string; jobId: string }> =>
   request(`${BASE}/courses/seed`, { method: 'POST' });
 
 // Plans

@@ -99,9 +99,11 @@ export default function App() {
   const handleSeed = async () => {
     setSeeding(true);
     try {
-      const result = await seedCourses();
+      await seedCourses();
+      // Seeding is async (BullMQ job), wait briefly then reload
+      await new Promise(r => setTimeout(r, 2000));
       await loadCourses();
-      alert(`Seeded ${result.inserted} courses`);
+      alert('Courses seeded successfully');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Seeding failed');
     } finally {
