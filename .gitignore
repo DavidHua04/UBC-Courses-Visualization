@@ -16,6 +16,9 @@ build/
 .vscode/
 .idea/
 
+
+*.json
+
 # logs
 npm-debug.log*
 yarn-debug.log*
