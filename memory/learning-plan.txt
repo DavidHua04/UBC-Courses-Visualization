@@ -1,0 +1,169 @@
+  UBC Degree Planner — Learning Plan
+
+  Philosophy
+
+  Learn each technology in context of this codebase, not in isolation. Read the actual files, then extend them. Interview prep  
+  comes naturally from understanding why each piece exists.
+
+  Phase 1 — REST APIs with Express
+
+  Why: The entire backend communication model. Understand this before touching the database.
+
+  Topics
+
+  - HTTP methods, status codes, request/response lifecycle
+  - Express routing, middleware, error handlers
+  - REST design conventions (nouns, versioning /api/v1/)
+
+  Project touchpoints
+
+  - Read backend/src/app.ts — see how middleware chains together
+  - Read backend/src/routes/courses.ts and plans.ts
+  - Use curl or Postman to manually call GET /api/health once running
+
+  Interview relevance
+
+  "Design a REST API for X" is a classic system design question.
+
+  ---
+  Phase 2 — PostgreSQL & SQL
+
+  Why: Persistent data storage. Every production app uses a relational database.
+
+  Topics
+
+  - Tables, primary keys, foreign keys, constraints
+  - SELECT, INSERT, UPDATE, DELETE, JOIN
+  - Migrations (why you never edit the DB schema by hand)
+  - Connection pooling
+
+  Project touchpoints
+
+  - Read backend/src/db/schema.ts — three tables, see the FKs and CHECK constraints
+  - Read drizzle/migrations/0000_stormy_corsair.sql — see the raw SQL Drizzle generated
+  - Run npm run db:studio to browse data visually (requires Docker running)
+
+  Interview relevance
+
+  SQL queries and schema design appear in almost every backend interview.
+
+  ---
+  Phase 3 — Docker & Dev Infrastructure
+
+  Why: Docker is how you run PostgreSQL and Redis locally without installing them globally. Also essential for deploying to any 
+  real environment.
+
+  Topics
+
+  - Containers vs VMs (mental model)
+  - Dockerfile — packaging an app into an image
+  - docker-compose.yml — orchestrating multiple services (app + db + redis)
+  - Volumes (data persistence), networks (container communication), env vars
+
+  Project touchpoints
+
+  - Read the project's docker-compose.yml — see how postgres, redis, and the backend are wired
+  - Run docker compose up and watch the services start
+  - docker ps, docker logs <container>, docker exec -it <container> bash
+
+  Interview relevance
+
+  "How would you containerize this service?" is a common DevOps/platform interview question.
+
+  ---
+  Phase 4 — Redis & Background Jobs
+
+  Why: Redis is used here for two distinct patterns — caching and job queues. Understanding both patterns matters for scaling.
+
+  Current state: Redis has been intentionally removed from the active routes so the app runs on PostgreSQL alone during Phases 1–4.
+  The Redis code is fully intact in its files — it is just not called yet. Re-wiring it is the exercise for this phase.
+
+  What was removed (and where to put it back):
+  - routes/plans.ts: getCachedValidation / setCachedValidation in GET /:id/validate
+  - routes/plans.ts: invalidateValidation in DELETE /:id and DELETE /:id/entries/:entryId
+  - routes/plans.ts: enqueueValidation in POST /:id/entries and PUT /:id/entries/:entryId
+  - routes/courses.ts: POST /seed now calls runSeed(db) directly instead of enqueueSeed() via BullMQ
+
+  Topics
+
+  - Redis as a key-value store (GET, SET, TTL, expiry)
+  - Caching patterns: cache-aside, invalidation strategies
+  - Job queues: why offload work? (long tasks, retries, rate limiting)
+  - BullMQ: queues, workers, jobs
+
+  Project touchpoints
+
+  - Read backend/src/services/cache.ts — Redis cache for validation results
+  - Read backend/src/redis/index.ts and src/services/queue.ts — BullMQ setup
+  - Read backend/src/services/__tests__/cache.test.ts — see how Redis is mocked in tests
+  - Restore the removed calls above one at a time; run tests after each step
+
+  Interview relevance
+
+  Caching and async job queues are core system design topics.
+
+  ---
+  Phase 5 — React & Frontend Architecture
+
+  Why: Understand how the UI talks to the backend and manages state.
+
+  Topics
+
+  - Components, props, state (useState, useEffect)
+  - Fetching data from an API (see src/services/api.ts)
+  - Tailwind CSS utility classes
+  - Drag and drop with @dnd-kit
+
+  Project touchpoints
+
+  - Read frontend/src/App.tsx — the root data-loading and state management
+  - Read frontend/src/components/PlanBoard.tsx — DnD context
+  - Read frontend/src/services/api.ts — every backend call in one place
+
+  Interview relevance
+
+  React component design and state management appear in frontend interviews.
+
+  ---
+  Phase 6 — Testing (Ongoing, parallel to each phase)
+
+  Why: Testing is a signal of engineering maturity. Every interview will ask about it.
+
+  Topics
+
+  - Unit tests vs integration tests
+  - Mocking external dependencies (DB, Redis, HTTP)
+  - vi.mock(), vi.hoisted(), spies
+
+  Project touchpoints
+
+  - Each phase above has matching test files — read them alongside the source
+  - Run full suite: cd backend && npm run test
+  - Run with coverage: npm run test:coverage
+
+  ---
+  Suggested Weekly Rhythm
+
+  1. Read the relevant source files in this project (30 min)
+  2. Follow one external tutorial/doc for the concept (1–2 hrs)
+  3. Make a small change or addition to this project (1–2 hrs)
+  4. Write or extend one test for your change
+
+  ---
+  Quick Reference — What to Read First
+
+  ┌────────────────────┬────────────────────────────────────────────┐
+  │ Want to understand │                 Start here                 │
+  ├────────────────────┼────────────────────────────────────────────┤
+  │ Data model         │ backend/src/db/schema.ts                   │
+  ├────────────────────┼────────────────────────────────────────────┤
+  │ Business logic     │ backend/src/services/validation.ts         │
+  ├────────────────────┼────────────────────────────────────────────┤
+  │ API surface        │ backend/src/routes/plans.ts                │
+  ├────────────────────┼────────────────────────────────────────────┤
+  │ Infra wiring       │ docker-compose.yml                         │
+  ├────────────────────┼────────────────────────────────────────────┤
+  │ Frontend data flow │ frontend/src/App.tsx + src/services/api.ts │
+  ├────────────────────┼────────────────────────────────────────────┤
+  │ Testing patterns   │ backend/src/routes/__tests__/plans.test.ts │
+  └────────────────────┴────────────────────────────────────────────┘

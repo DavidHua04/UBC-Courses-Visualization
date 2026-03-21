@@ -76,3 +76,9 @@ export const STATUS_LABELS: Record<string, string> = {
   completed: 'Completed',
   failed: 'Failed',
 };
+
+export interface AcademicGoal {
+  id: string;
+  name: string;
+  satisfied: boolean;
+}

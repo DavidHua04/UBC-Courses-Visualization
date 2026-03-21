@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { PlanSummary, PlanWithEntries, CourseRow } from './types';
+import type { PlanSummary, PlanWithEntries, CourseRow, AcademicGoal } from './types';
 import { getPlans, createPlan, deletePlan, getPlan, getCourses, seedCourses } from './services/api';
 import Sidebar from './components/Sidebar';
 import PlanBoard from './components/PlanBoard';
@@ -12,6 +12,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const [goals, setGoals] = useState<AcademicGoal[]>([
+    { id: '1', name: 'Computer Science Major', satisfied: false },
+    { id: '2', name: 'Graduate in 4 Years', satisfied: false },
+  ]);
 
   const loadPlans = useCallback(async () => {
     const data = await getPlans();
@@ -62,9 +66,7 @@ export default function App() {
     });
   }, [selectedPlanId, loadPlan]);
 
-  const handleSelectPlan = (id: string) => {
-    setSelectedPlanId(id);
-  };
+  const handleSelectPlan = (id: string) => setSelectedPlanId(id);
 
   const handleCreatePlan = async () => {
     const name = prompt('Plan name:');
@@ -100,7 +102,6 @@ export default function App() {
     setSeeding(true);
     try {
       await seedCourses();
-      // Seeding is async (BullMQ job), wait briefly then reload
       await new Promise(r => setTimeout(r, 2000));
       await loadCourses();
       alert('Courses seeded successfully');
@@ -109,6 +110,16 @@ export default function App() {
     } finally {
       setSeeding(false);
     }
+  };
+
+  const handleAddGoal = () => {
+    const name = prompt('Goal name:');
+    if (!name?.trim()) return;
+    setGoals(g => [...g, { id: Date.now().toString(), name: name.trim(), satisfied: false }]);
+  };
+
+  const handleToggleGoal = (id: string) => {
+    setGoals(g => g.map(goal => goal.id === id ? { ...goal, satisfied: !goal.satisfied } : goal));
   };
 
   // Flatten completed entries for sidebar
@@ -132,47 +143,46 @@ export default function App() {
         <p className="text-red-600 font-medium">Could not connect to server</p>
         <p className="text-gray-500 text-sm">{error}</p>
         <p className="text-gray-400 text-xs">Make sure the backend is running on port 3000</p>
-        {courseMap.size === 0 && (
-          <button
-            onClick={handleSeed}
-            disabled={seeding}
-            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-          >
-            {seeding ? 'Seeding...' : 'Seed course data'}
-          </button>
-        )}
+        <button
+          onClick={handleSeed}
+          disabled={seeding}
+          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+        >
+          {seeding ? 'Seeding...' : 'Seed course data'}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-[#f4f3f3] overflow-hidden">
       <Sidebar
         plans={plans}
         selectedPlanId={selectedPlanId}
         completedEntries={completedEntries}
+        courseMap={courseMap}
+        goals={goals}
         onSelectPlan={handleSelectPlan}
         onCreatePlan={handleCreatePlan}
         onDeletePlan={handleDeletePlan}
+        onAddGoal={handleAddGoal}
+        onToggleGoal={handleToggleGoal}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
-          <span className="text-xs text-gray-400">UBC Degree Planner</span>
-          <div className="flex items-center gap-3">
-            {courseMap.size === 0 && (
-              <span className="text-xs text-amber-600">No courses — seed the database first</span>
-            )}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Seed button — small, unobtrusive */}
+        {courseMap.size === 0 && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
+            <span className="text-xs text-amber-700">No courses in database — seed first</span>
             <button
               onClick={handleSeed}
               disabled={seeding}
-              className="text-xs text-gray-500 hover:text-gray-700 border rounded px-2 py-1"
+              className="text-xs text-amber-700 border border-amber-300 rounded px-2 py-1 hover:bg-amber-100"
             >
               {seeding ? 'Seeding...' : 'Seed courses'}
             </button>
           </div>
-        </div>
+        )}
 
         {!plan ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
@@ -188,6 +198,7 @@ export default function App() {
           <PlanBoard
             plan={plan}
             courseMap={courseMap}
+            goals={goals}
             onPlanUpdated={handlePlanUpdated}
           />
         )}

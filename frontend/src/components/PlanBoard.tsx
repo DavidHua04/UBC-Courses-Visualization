@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import type { PlanWithEntries, EntryRow, CourseRow, ValidationResult } from '../types';
+import type { PlanWithEntries, EntryRow, CourseRow, ValidationResult, AcademicGoal } from '../types';
 import { TERMS } from '../types';
 import { addEntry, deleteEntry, updateEntry, validatePlan } from '../services/api';
 import TermColumn from './TermColumn';
@@ -19,12 +19,13 @@ import CourseSearchModal from './CourseSearchModal';
 interface Props {
   plan: PlanWithEntries;
   courseMap: Map<string, CourseRow>;
+  goals: AcademicGoal[];
   onPlanUpdated: () => void;
 }
 
 const YEAR_RANGE = [1, 2, 3, 4] as const;
 
-export default function PlanBoard({ plan, courseMap, onPlanUpdated }: Props) {
+export default function PlanBoard({ plan, courseMap, goals, onPlanUpdated }: Props) {
   const [modal, setModal] = useState<{ year: number; term: string } | null>(null);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [validating, setValidating] = useState(false);
@@ -135,11 +136,25 @@ export default function PlanBoard({ plan, courseMap, onPlanUpdated }: Props) {
       {/* Main board */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b bg-white flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-gray-900">{plan.name}</h2>
-          {plan.description && (
-            <p className="text-sm text-gray-500">{plan.description}</p>
-          )}
+        <div className="px-6 h-[72px] border-b bg-white flex items-center justify-between shrink-0">
+          <h2 className="text-[30px] font-normal text-black">{plan.name}</h2>
+          <div className="flex items-center gap-2">
+            <button className="h-[29px] px-4 bg-white/90 border border-black/60 rounded-[12px] shadow-[0px_4px_10px_rgba(0,0,0,0.25)] text-xs text-black hover:bg-gray-50">
+              Progress
+            </button>
+            <button className="h-[29px] px-4 bg-white/90 border border-black/60 rounded-[12px] shadow-[0px_4px_10px_rgba(0,0,0,0.25)] text-xs text-black hover:bg-gray-50">
+              Compare Plans
+            </button>
+            <button className="h-[29px] px-4 bg-white/90 border border-black/60 rounded-[12px] shadow-[0px_4px_10px_rgba(0,0,0,0.25)] text-xs text-black hover:bg-gray-50">
+              Export Plan
+            </button>
+            <button
+              onClick={() => setModal({ year: 1, term: 'W1' })}
+              className="h-[29px] px-4 bg-white/90 border border-black/60 rounded-[12px] shadow-[0px_4px_10px_rgba(0,0,0,0.25)] text-xs text-black hover:bg-gray-50"
+            >
+              Add Term
+            </button>
+          </div>
         </div>
 
         {/* Term columns */}
@@ -175,6 +190,8 @@ export default function PlanBoard({ plan, courseMap, onPlanUpdated }: Props) {
         validation={validation}
         validating={validating}
         entries={allEntries}
+        courseMap={courseMap}
+        goals={goals}
         onValidate={handleValidate}
       />
 
