@@ -1,9 +1,7 @@
 import { Worker } from "bullmq";
 import { planQueue, seedQueue } from "../redis";
-import { validatePlan } from "./validation";
-import { setCachedValidation } from "./cache";
-import { runSeed } from "../data/seed";
-import { db } from "../db";
+import { validationService, courseService } from "../container";
+import { SEED_COURSES } from "../data/seed";
 
 export async function enqueueValidation(planId: string): Promise<void> {
   await planQueue.add("validate", { planId }, { jobId: `validate:${planId}` });
@@ -21,8 +19,7 @@ export function startWorkers(): void {
     "plan-validation",
     async (job) => {
       const { planId } = job.data as { planId: string };
-      const result = await validatePlan(planId);
-      await setCachedValidation(planId, result);
+      const result = await validationService.validate(planId, true);
       return result;
     },
     { connection: bullConnection }
@@ -35,7 +32,7 @@ export function startWorkers(): void {
   const seedWorker = new Worker(
     "course-seed",
     async (_job) => {
-      await runSeed(db);
+      await courseService.seed(SEED_COURSES);
       return { seeded: true };
     },
     { connection: bullConnection }

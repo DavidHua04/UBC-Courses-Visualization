@@ -1,72 +1,42 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-// ── Mocks (hoisted so they apply before any module is loaded) ──────────────
+// ── Mock container services ──────────────────────────────────────────────────
 
-const mockDb = vi.hoisted(() => ({
-  select: vi.fn(),
-  insert: vi.fn(),
+const mockCourseService = vi.hoisted(() => ({
+  list: vi.fn(),
+  getById: vi.fn(),
+  seed: vi.fn(),
+}));
+
+const mockPlanService = vi.hoisted(() => ({
+  list: vi.fn(),
+  getById: vi.fn(),
+  getWithEntries: vi.fn(),
+  create: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
+  addEntry: vi.fn(),
+  updateEntry: vi.fn(),
+  deleteEntry: vi.fn(),
+  reorderEntries: vi.fn(),
 }));
 
-vi.mock("../../db", () => ({ db: mockDb }));
-
-vi.mock("../../redis", () => ({
-  redis: { get: vi.fn(), set: vi.fn(), del: vi.fn() },
-  planQueue: { add: vi.fn() },
-  seedQueue: { add: vi.fn() },
+const mockValidationService = vi.hoisted(() => ({
+  validate: vi.fn(),
 }));
 
-vi.mock("../../services/queue", () => ({
-  enqueueValidation: vi.fn().mockResolvedValue(undefined),
-  enqueueSeed: vi.fn().mockResolvedValue({ jobId: "seed-job-1" }),
-  startWorkers: vi.fn(),
+vi.mock("../../container", () => ({
+  courseService: mockCourseService,
+  planService: mockPlanService,
+  validationService: mockValidationService,
 }));
 
-vi.mock("../../services/cache", () => ({
-  getCachedValidation: vi.fn().mockResolvedValue(null),
-  setCachedValidation: vi.fn().mockResolvedValue(undefined),
-  invalidateValidation: vi.fn().mockResolvedValue(undefined),
-  getDraftState: vi.fn().mockResolvedValue(null),
-  setDraftState: vi.fn().mockResolvedValue(undefined),
-}));
-
-vi.mock("../../services/validation", () => ({
-  validatePlan: vi.fn().mockResolvedValue({
-    valid: true,
-    errors: [],
-    warnings: [],
-    computedAt: new Date().toISOString(),
-  }),
-}));
-
-// ── Imports (after mocks) ──────────────────────────────────────────────────
+// ── Imports ──────────────────────────────────────────────────────────────────
 
 import { createApp } from "../../app";
-import { enqueueSeed } from "../../services/queue";
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-/** Creates a chainable, awaitable mock for Drizzle query builder calls. */
-function makeChain<T>(result: T) {
-  const chain: any = {
-    from: () => chain,
-    where: () => chain,
-    limit: () => chain,
-    offset: () => chain,
-    orderBy: () => chain,
-    groupBy: () => chain,
-    leftJoin: () => chain,
-    values: () => chain,
-    set: () => chain,
-    returning: () => Promise.resolve(result),
-    then: (res: any, rej?: any) => Promise.resolve(result).then(res, rej),
-    catch: (fn: any) => Promise.resolve(result).catch(fn),
-    finally: (fn: any) => Promise.resolve(result).finally(fn),
-  };
-  return chain;
-}
+// ── Test data ────────────────────────────────────────────────────────────────
 
 const fakeCourse = {
   id: "CPSC110",
@@ -78,11 +48,9 @@ const fakeCourse = {
   prerequisites: null,
   corequisites: [],
   termsOffered: ["W1", "W2", "S"],
-  createdAt: new Date("2025-01-01"),
-  updatedAt: new Date("2025-01-01"),
 };
 
-// ── Tests ──────────────────────────────────────────────────────────────────
+// ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Courses routes", () => {
   let app: ReturnType<typeof createApp>;
@@ -90,19 +58,16 @@ describe("Courses routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     app = createApp();
-    mockDb.select.mockReturnValue(makeChain([]));
-    mockDb.insert.mockReturnValue(makeChain([]));
-    mockDb.update.mockReturnValue(makeChain([]));
-    mockDb.delete.mockReturnValue(makeChain([]));
   });
 
   // ── GET /api/v1/courses ─────────────────────────────────────────────────
 
   describe("GET /api/v1/courses", () => {
     it("returns paginated list with default params", async () => {
-      mockDb.select
-        .mockReturnValueOnce(makeChain([fakeCourse]))
-        .mockReturnValueOnce(makeChain([{ count: 1 }]));
+      mockCourseService.list.mockResolvedValueOnce({
+        data: [fakeCourse],
+        total: 1,
+      });
 
       const res = await request(app).get("/api/v1/courses");
 
@@ -113,9 +78,7 @@ describe("Courses routes", () => {
     });
 
     it("respects limit and offset query params", async () => {
-      mockDb.select
-        .mockReturnValueOnce(makeChain([]))
-        .mockReturnValueOnce(makeChain([{ count: 30 }]));
+      mockCourseService.list.mockResolvedValueOnce({ data: [], total: 30 });
 
       const res = await request(app).get("/api/v1/courses?limit=5&offset=10");
 
@@ -124,9 +87,7 @@ describe("Courses routes", () => {
     });
 
     it("clamps limit to 100 max", async () => {
-      mockDb.select
-        .mockReturnValueOnce(makeChain([]))
-        .mockReturnValueOnce(makeChain([{ count: 0 }]));
+      mockCourseService.list.mockResolvedValueOnce({ data: [], total: 0 });
 
       const res = await request(app).get("/api/v1/courses?limit=9999");
 
@@ -135,9 +96,7 @@ describe("Courses routes", () => {
     });
 
     it("clamps offset to 0 min", async () => {
-      mockDb.select
-        .mockReturnValueOnce(makeChain([]))
-        .mockReturnValueOnce(makeChain([{ count: 0 }]));
+      mockCourseService.list.mockResolvedValueOnce({ data: [], total: 0 });
 
       const res = await request(app).get("/api/v1/courses?offset=-5");
 
@@ -146,9 +105,7 @@ describe("Courses routes", () => {
     });
 
     it("returns empty data when no courses match", async () => {
-      mockDb.select
-        .mockReturnValueOnce(makeChain([]))
-        .mockReturnValueOnce(makeChain([{ count: 0 }]));
+      mockCourseService.list.mockResolvedValueOnce({ data: [], total: 0 });
 
       const res = await request(app).get("/api/v1/courses");
 
@@ -162,7 +119,7 @@ describe("Courses routes", () => {
 
   describe("GET /api/v1/courses/:id", () => {
     it("returns a course by ID", async () => {
-      mockDb.select.mockReturnValueOnce(makeChain([fakeCourse]));
+      mockCourseService.getById.mockResolvedValueOnce(fakeCourse);
 
       const res = await request(app).get("/api/v1/courses/CPSC110");
 
@@ -173,7 +130,7 @@ describe("Courses routes", () => {
     });
 
     it("returns 404 when course not found", async () => {
-      mockDb.select.mockReturnValueOnce(makeChain([]));
+      mockCourseService.getById.mockResolvedValueOnce(null);
 
       const res = await request(app).get("/api/v1/courses/FAKE999");
 
@@ -185,12 +142,14 @@ describe("Courses routes", () => {
   // ── POST /api/v1/courses/seed ───────────────────────────────────────────
 
   describe("POST /api/v1/courses/seed", () => {
-    it("enqueues a seed job and returns 202 with jobId", async () => {
+    it("seeds courses and returns 202", async () => {
+      mockCourseService.seed.mockResolvedValueOnce(29);
+
       const res = await request(app).post("/api/v1/courses/seed");
 
       expect(res.status).toBe(202);
-      expect(res.body.jobId).toBe("seed-job-1");
-      expect(enqueueSeed).toHaveBeenCalledTimes(1);
+      expect(res.body.message).toContain("29");
+      expect(mockCourseService.seed).toHaveBeenCalledTimes(1);
     });
   });
 

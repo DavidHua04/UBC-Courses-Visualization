@@ -1,19 +1,7 @@
 import { sql } from "drizzle-orm";
-import type { PrerequisiteRule } from "../models/types";
+import type { CourseRow } from "../models/types";
 
-interface SeedCourse {
-  id: string;
-  dept: string;
-  code: string;
-  title: string;
-  credits: string;
-  description: string | null;
-  prerequisites: PrerequisiteRule | null;
-  corequisites: string[];
-  termsOffered: string[];
-}
-
-const SEED_COURSES: SeedCourse[] = [
+export const SEED_COURSES: CourseRow[] = [
   // ─── Year 1 CPSC ───────────────────────────────────────────────
   {
     id: "CPSC110",
