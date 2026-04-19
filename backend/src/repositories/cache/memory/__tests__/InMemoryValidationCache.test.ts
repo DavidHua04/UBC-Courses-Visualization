@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { InMemoryValidationCache } from "../InMemoryValidationCache";
-import type { ValidationResult } from "../../../models/types";
+import type { ValidationResult } from "../../../../models/types";
 
 function makeResult(overrides: Partial<ValidationResult> = {}): ValidationResult {
   return {

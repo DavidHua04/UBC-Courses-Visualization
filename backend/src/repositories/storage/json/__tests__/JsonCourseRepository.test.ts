@@ -3,7 +3,7 @@ import { writeFileSync, unlinkSync, mkdtempSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { JsonCourseRepository } from "../JsonCourseRepository";
-import type { CourseRow } from "../../../models/types";
+import type { CourseRow } from "../../../../models/types";
 
 function makeCourse(overrides: Partial<CourseRow> = {}): CourseRow {
   return {

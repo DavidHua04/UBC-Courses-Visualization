@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { PlanSummary, PlanWithEntries, CourseRow, AcademicGoal } from './types';
-import { getPlans, createPlan, deletePlan, getPlan, getCourses, seedCourses } from './services/api';
+import type { PlanSummary, PlanWithEntries, CourseRow, AcademicGoal, EntryRow } from './types';
+import { getPlans, createPlan, deletePlan, getPlan, getCourses, seedCourses, deleteEntry } from './services/api';
 import Sidebar from './components/Sidebar';
 import PlanBoard from './components/PlanBoard';
+import UploadModal from './components/UploadModal';
 
 export default function App() {
   const [plans, setPlans] = useState<PlanSummary[]>([]);
@@ -12,6 +13,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
   const [goals, setGoals] = useState<AcademicGoal[]>([
     { id: '1', name: 'Computer Science Major', satisfied: false },
     { id: '2', name: 'Graduate in 4 Years', satisfied: false },
@@ -36,7 +38,6 @@ export default function App() {
     setPlan(data);
   }, []);
 
-  // Initial load
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -55,7 +56,6 @@ export default function App() {
     init();
   }, [loadPlans, loadCourses]);
 
-  // Load selected plan
   useEffect(() => {
     if (!selectedPlanId) {
       setPlan(null);
@@ -122,8 +122,24 @@ export default function App() {
     setGoals(g => g.map(goal => goal.id === id ? { ...goal, satisfied: !goal.satisfied } : goal));
   };
 
+  const handleDeleteCompleted = async (entryId: string) => {
+    if (!plan) return;
+    try {
+      await deleteEntry(plan.id, entryId);
+      handlePlanUpdated();
+    } catch (err) {
+      console.error('Failed to delete completed entry:', err);
+    }
+  };
+
+  const handleUploadSubmit = (_rows: Array<{ courseId: string; title: string; credits: string; term: string }>) => {
+    // For now, close the modal. Full upload would create entries via the API.
+    setShowUpload(false);
+    alert('Upload functionality will be connected to the backend API.');
+  };
+
   // Flatten completed entries for sidebar
-  const completedEntries = plan
+  const completedEntries: EntryRow[] = plan
     ? Object.values(plan.entries)
         .flatMap(byTerm => Object.values(byTerm).flat())
         .filter(e => e.status === 'completed')
@@ -167,10 +183,11 @@ export default function App() {
         onDeletePlan={handleDeletePlan}
         onAddGoal={handleAddGoal}
         onToggleGoal={handleToggleGoal}
+        onUpload={() => setShowUpload(true)}
+        onDeleteCompleted={handleDeleteCompleted}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Seed button — small, unobtrusive */}
         {courseMap.size === 0 && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
             <span className="text-xs text-amber-700">No courses in database — seed first</span>
@@ -189,7 +206,7 @@ export default function App() {
             <p className="text-base">No plan selected</p>
             <button
               onClick={handleCreatePlan}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+              className="bg-[#101828] hover:bg-[#1d2939] text-white px-5 py-2 rounded-lg text-sm"
             >
               Create your first plan
             </button>
@@ -197,12 +214,21 @@ export default function App() {
         ) : (
           <PlanBoard
             plan={plan}
+            plans={plans}
             courseMap={courseMap}
             goals={goals}
+            completedEntries={completedEntries}
             onPlanUpdated={handlePlanUpdated}
           />
         )}
       </div>
+
+      {showUpload && (
+        <UploadModal
+          onClose={() => setShowUpload(false)}
+          onSubmit={handleUploadSubmit}
+        />
+      )}
     </div>
   );
 }
