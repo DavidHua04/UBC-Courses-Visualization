@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,10 @@ import SummaryPanel from './SummaryPanel';
 import CourseSearchModal from './CourseSearchModal';
 import ProgressModal from './ProgressModal';
 import CompareModal from './CompareModal';
+import ProgramPicker from './ProgramPicker';
+import RecommendationsPanel from './RecommendationsPanel';
+
+const programStorageKey = (planId: string) => `ubcdp:program:${planId}`;
 
 interface Props {
   plan: PlanWithEntries;
@@ -36,6 +40,28 @@ export default function PlanBoard({ plan, plans, courseMap, goals, completedEntr
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [programId, setProgramIdState] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(programStorageKey(plan.id));
+  });
+
+  // Persist program choice per-plan in localStorage
+  const setProgramId = useCallback(
+    (next: string | null) => {
+      setProgramIdState(next);
+      if (typeof window !== 'undefined') {
+        if (next) window.localStorage.setItem(programStorageKey(plan.id), next);
+        else window.localStorage.removeItem(programStorageKey(plan.id));
+      }
+    },
+    [plan.id],
+  );
+
+  // Reload selection if plan changes (e.g. user switches plans without remounting)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setProgramIdState(window.localStorage.getItem(programStorageKey(plan.id)));
+  }, [plan.id]);
 
   // Flatten all entries from the nested structure
   const allEntries: EntryRow[] = [];
@@ -144,6 +170,9 @@ export default function PlanBoard({ plan, plans, courseMap, goals, completedEntr
         {/* Header */}
         <div className="h-14 bg-white border-b border-black/[0.09] px-[18px] flex items-center justify-between shrink-0 gap-3">
           <h2 className="text-[22px] font-semibold text-black whitespace-nowrap shrink-0">{plan.name}</h2>
+          <div className="flex-1 flex justify-center">
+            <ProgramPicker programId={programId} onChange={setProgramId} />
+          </div>
           <div className="flex gap-[7px]">
             {PLAN_BTNS.map(({ label, fn }) => (
               <button
@@ -246,11 +275,20 @@ export default function PlanBoard({ plan, plans, courseMap, goals, completedEntr
       {showProgress && (
         <ProgressModal
           onClose={() => setShowProgress(false)}
+          planId={plan.id}
+          programId={programId}
           completedEntries={completedEntries}
           planEntries={allEntries}
           courseMap={courseMap}
         />
       )}
+
+      <RecommendationsPanel
+        planId={plan.id}
+        programId={programId}
+        refreshKey={allEntries.length}
+      />
+
       {showCompare && (
         <CompareModal
           plans={plans}

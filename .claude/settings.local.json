@@ -4,7 +4,18 @@
       "Bash(npm test:*)",
       "mcp__figma__get_design_context",
       "mcp__figma__get_screenshot",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(npx tsx *)",
+      "Bash(node -e \"const c=require\\('./data/courses-catalog.json'\\);const ids=['CPSC110','CPSC121','CPSC210','CPSC213','CPSC221','CPSC310','CPSC320','CPSC340','MATH200','STAT241'];for\\(const id of ids\\){const x=c.find\\(z=>z.id===id\\);console.log\\(id,'=>',JSON.stringify\\(x?{prereq:x.prerequisites,raw:x.prerequisitesRaw}:'NOT FOUND'\\)\\);}\")",
+      "Bash(node -e \"const c=require\\('./data/courses-catalog.json'\\);console.log\\('STAT count:',c.filter\\(z=>z.dept==='STAT'\\).length\\);console.log\\('First 5 STAT:',c.filter\\(z=>z.dept==='STAT'\\).slice\\(0,5\\).map\\(z=>z.id\\)\\);console.log\\('STAT 241 search:',c.filter\\(z=>z.id.startsWith\\('STAT24'\\)\\).map\\(z=>z.id\\)\\);\")",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"Backend launching in background, PID $!\")",
+      "Bash(curl -sf http://localhost:3000/api/health)",
+      "Bash(curl -s http://localhost:3000/api/v1/faculties)",
+      "Bash(curl -s http://localhost:3000/api/v1/programs)",
+      "Bash(curl -s \"http://localhost:3000/api/v1/programs/cs-major\")",
+      "Bash(echo \"PID: $!\")"
     ]
   }
 }

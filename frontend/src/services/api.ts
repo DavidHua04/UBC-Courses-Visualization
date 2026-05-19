@@ -1,4 +1,14 @@
-import type { CourseRow, PlanSummary, PlanWithEntries, EntryRow, ValidationResult } from '../types';
+import type {
+  CourseRow,
+  PlanSummary,
+  PlanWithEntries,
+  EntryRow,
+  ValidationResult,
+  Faculty,
+  Program,
+  DegreeProgress,
+  Recommendation,
+} from '../types';
 
 const BASE = '/api/v1';
 
@@ -87,3 +97,34 @@ export const reorderEntries = (
 
 export const validatePlan = (planId: string): Promise<ValidationResult> =>
   request(`${BASE}/plans/${planId}/validate`);
+
+// Programs
+export const getFaculties = async (): Promise<Faculty[]> => {
+  const res = await request<{ data: Faculty[] }>(`${BASE}/faculties`);
+  return res.data;
+};
+
+export const getPrograms = async (facultyId?: string): Promise<Program[]> => {
+  const q = facultyId ? `?facultyId=${encodeURIComponent(facultyId)}` : '';
+  const res = await request<{ data: Program[] }>(`${BASE}/programs${q}`);
+  return res.data;
+};
+
+export const getProgram = async (id: string): Promise<Program> => {
+  const res = await request<{ data: Program }>(`${BASE}/programs/${id}`);
+  return res.data;
+};
+
+// Progress
+export const getProgress = (planId: string, programId: string): Promise<DegreeProgress> =>
+  request(`${BASE}/plans/${planId}/progress?programId=${encodeURIComponent(programId)}`);
+
+// Recommendations
+export const getRecommendations = async (
+  planId: string,
+  programId?: string,
+): Promise<Recommendation[]> => {
+  const q = programId ? `?programId=${encodeURIComponent(programId)}` : '';
+  const res = await request<{ data: Recommendation[] }>(`${BASE}/plans/${planId}/recommendations${q}`);
+  return res.data;
+};

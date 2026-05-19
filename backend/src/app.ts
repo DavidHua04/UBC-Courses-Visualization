@@ -2,6 +2,7 @@ import express, { type Request, type Response, type NextFunction } from "express
 import cors from "cors";
 import coursesRouter from "./routes/courses";
 import plansRouter from "./routes/plans";
+import programsRouter from "./routes/programs";
 import type { ApiError } from "./models/types";
 
 export function createApp() {
@@ -19,6 +20,7 @@ export function createApp() {
   // API routes
   app.use("/api/v1/courses", coursesRouter);
   app.use("/api/v1/plans", plansRouter);
+  app.use("/api/v1", programsRouter);
 
   // 404 handler
   app.use((_req: Request, res: Response) => {

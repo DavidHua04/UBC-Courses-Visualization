@@ -12,7 +12,9 @@
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "catalog:build": "tsx scripts/transform-courses.ts --in ../reference/Degree-Planner-main/data/Scraper/ubc_prereqs.csv --out data/courses-catalog.json",
+    "catalog:install": "tsx scripts/install-catalog.ts"
   },
   "keywords": [],
   "license": "MIT",

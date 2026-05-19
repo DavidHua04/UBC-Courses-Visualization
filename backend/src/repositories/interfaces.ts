@@ -3,6 +3,8 @@ import type {
     PlanRow,
     EntryRow,
     ValidationResult,
+    Faculty,
+    Program,
   } from "../models/types";
   
   // ── Filter types ─────────────────────────────────────────────────
@@ -69,4 +71,11 @@ import type {
     get(planId: string): Promise<ValidationResult | null>;
     set(planId: string, result: ValidationResult, ttlSeconds?: number): Promise<void>;
     invalidate(planId: string): Promise<void>;
+  }
+
+  export interface IProgramRepository {
+    findAllFaculties(): Promise<Faculty[]>;
+    findFacultyById(id: string): Promise<Faculty | null>;
+    findAllPrograms(facultyId?: string): Promise<Program[]>;
+    findProgramById(id: string): Promise<Program | null>;
   }

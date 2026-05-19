@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { planService, validationService, courseService } from "../container";
+import { planService, validationService, courseService, progressService, recommendationsService } from "../container";
 import type { ApiError } from "../models/types";
 
 const router = Router();
@@ -237,6 +237,50 @@ router.get("/:id/validate", async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error("GET /plans/:id/validate error:", err);
+    res.status(500).json({ error: "internal_error" } satisfies ApiError);
+  }
+});
+
+// GET /api/v1/plans/:id/progress?programId=cs-major
+router.get("/:id/progress", async (req, res) => {
+  try {
+    const programId = typeof req.query.programId === "string" ? req.query.programId : null;
+    if (!programId) {
+      return res.status(400).json({
+        error: "validation_error",
+        message: "programId query param is required",
+        fields: { programId: "required" },
+      } satisfies ApiError);
+    }
+
+    const plan = await planService.getById(req.params.id);
+    if (!plan) {
+      return res.status(404).json({ error: "not_found", message: "Plan not found" } satisfies ApiError);
+    }
+
+    const result = await progressService.compute(req.params.id, programId);
+    if (!result) {
+      return res.status(404).json({ error: "not_found", message: "Program not found" } satisfies ApiError);
+    }
+    res.json(result);
+  } catch (err) {
+    console.error("GET /plans/:id/progress error:", err);
+    res.status(500).json({ error: "internal_error" } satisfies ApiError);
+  }
+});
+
+// GET /api/v1/plans/:id/recommendations?programId=cs-major
+router.get("/:id/recommendations", async (req, res) => {
+  try {
+    const programId = typeof req.query.programId === "string" ? req.query.programId : undefined;
+    const plan = await planService.getById(req.params.id);
+    if (!plan) {
+      return res.status(404).json({ error: "not_found", message: "Plan not found" } satisfies ApiError);
+    }
+    const recs = await recommendationsService.generate(req.params.id, programId);
+    res.json({ data: recs });
+  } catch (err) {
+    console.error("GET /plans/:id/recommendations error:", err);
     res.status(500).json({ error: "internal_error" } satisfies ApiError);
   }
 });

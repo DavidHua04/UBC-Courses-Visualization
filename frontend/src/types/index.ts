@@ -82,3 +82,85 @@ export interface AcademicGoal {
   name: string;
   satisfied: boolean;
 }
+
+// ── Program / progress / recommendations (backend domain) ────────
+
+export interface CourseFilter {
+  depts?: string[];
+  minLevel?: number;
+  maxLevel?: number;
+  facultyId?: string;
+  includeIds?: string[];
+  excludeIds?: string[];
+}
+
+export type RequirementMatcher =
+  | { type: 'courses_one_of'; courses: string[] }
+  | { type: 'courses_all_of'; courses: string[] }
+  | { type: 'credits_from_filter'; minCredits: number; filter: CourseFilter }
+  | { type: 'credits_total'; minCredits: number }
+  | { type: 'breadth_categories'; minCategories: number; categories: Record<string, CourseFilter> };
+
+export type RequirementType =
+  | 'required'
+  | 'elective'
+  | 'breadth'
+  | 'communication'
+  | 'lab'
+  | 'foundational';
+
+export interface DegreeRequirement {
+  id: string;
+  name: string;
+  type: RequirementType;
+  credits: number;
+  matcher: RequirementMatcher;
+  description?: string;
+}
+
+export interface Faculty {
+  id: string;
+  name: string;
+  requirements?: DegreeRequirement[];
+}
+
+export interface Program {
+  id: string;
+  name: string;
+  facultyId: string;
+  totalCredits: number;
+  description?: string;
+  requirements: DegreeRequirement[];
+}
+
+export interface RequirementProgress {
+  requirementId: string;
+  requirementName: string;
+  requirementType: RequirementType;
+  completedCredits: number;
+  requiredCredits: number;
+  satisfied: boolean;
+  satisfyingCourseIds: string[];
+}
+
+export interface DegreeProgress {
+  programId: string;
+  totalCredits: number;
+  completedCredits: number;
+  percent: number;
+  requirements: RequirementProgress[];
+}
+
+export type RecommendationSeverity = 'info' | 'suggestion' | 'warning';
+
+export interface Recommendation {
+  id: string;
+  severity: RecommendationSeverity;
+  title: string;
+  message: string;
+  context?: {
+    termKey?: string;
+    courseIds?: string[];
+    requirementIds?: string[];
+  };
+}
