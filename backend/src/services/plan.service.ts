@@ -1,11 +1,13 @@
-import type { PlanRow, EntryRow, PlanWithEntries } from "../models/types";
 import type {
+  PlanRow,
+  EntryRow,
+  PlanWithEntries,
   IPlanRepository,
   IPlanEntryRepository,
   IValidationCache,
   NewEntry,
   EntryUpdates,
-} from "../repositories/interfaces";
+} from "../dataModel";
 
 export class PlanService {
   constructor(

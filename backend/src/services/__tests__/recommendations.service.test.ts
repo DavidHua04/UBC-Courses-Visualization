@@ -5,8 +5,11 @@ import type {
   ICourseRepository,
   IPlanEntryRepository,
   IProgramRepository,
-} from "../../repositories/interfaces";
-import type { CourseRow, EntryRow, Faculty, Program } from "../../models/types";
+  CourseRow,
+  EntryRow,
+  Faculty,
+  Program,
+} from "../../dataModel";
 
 const c = (id: string, dept: string, code: string, credits = "3.0"): CourseRow => ({
   id, dept, code, title: id, credits, description: null, prerequisites: null,
@@ -18,7 +21,6 @@ class CourseRepo implements ICourseRepository {
   async findAll() { return { data: this.all, total: this.all.length }; }
   async findById(id: string) { return this.all.find((x) => x.id === id) ?? null; }
   async findByIds(ids: string[]) { const s = new Set(ids); return this.all.filter((x) => s.has(x.id)); }
-  async seedAll() { return this.all.length; }
 }
 
 class EntryRepo implements IPlanEntryRepository {

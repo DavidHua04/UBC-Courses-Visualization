@@ -1,4 +1,4 @@
-import type { PrerequisiteRule } from "../models/types";
+import type { PrerequisiteRule } from "../dataModel";
 
 const COURSE_TOKEN = /\b([A-Z]{2,5})(?:_V)?\s+(\d{3,4}[A-Z]?)\b/g;
 const SINGLE_COURSE_TOKEN = /^([A-Z]{2,5})(?:_V)?\s+(\d{3,4}[A-Z]?)$/;

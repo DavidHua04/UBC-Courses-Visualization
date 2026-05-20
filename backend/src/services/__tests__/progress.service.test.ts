@@ -4,14 +4,12 @@ import type {
   ICourseRepository,
   IPlanEntryRepository,
   IProgramRepository,
-} from "../../repositories/interfaces";
-import type {
   CourseRow,
   EntryRow,
   Faculty,
   Program,
   RequirementMatcher,
-} from "../../models/types";
+} from "../../dataModel";
 
 const c = (id: string, dept: string, code: string, credits = "3.0", faculty?: string): CourseRow => ({
   id,
@@ -34,7 +32,6 @@ class CourseRepo implements ICourseRepository {
     const s = new Set(ids);
     return this.all.filter((x) => s.has(x.id));
   }
-  async seedAll() { return this.all.length; }
 }
 
 class EntryRepo implements IPlanEntryRepository {

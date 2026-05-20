@@ -3,7 +3,7 @@ import cors from "cors";
 import coursesRouter from "./routes/courses";
 import plansRouter from "./routes/plans";
 import programsRouter from "./routes/programs";
-import type { ApiError } from "./models/types";
+import type { ApiError } from "./dataModel";
 
 export function createApp() {
   const app = express();

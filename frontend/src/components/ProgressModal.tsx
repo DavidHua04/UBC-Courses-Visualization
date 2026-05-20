@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { EntryRow, CourseRow, DegreeProgress, RequirementProgress, RequirementType } from '../types';
 import { getProgress } from '../services/api';
 
@@ -21,28 +21,78 @@ const TYPE_LABEL: Record<RequirementType, string> = {
   foundational: 'Foundational',
 };
 
+const transferStorageKey = (planId: string, programId: string) =>
+  `ubc:transferCredits:${planId}:${programId}`;
+
+function loadTransferCredits(planId: string, programId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(transferStorageKey(planId, programId));
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return new Set(parsed.filter((x): x is string => typeof x === 'string'));
+  } catch { /* ignore */ }
+  return new Set();
+}
+
+function saveTransferCredits(planId: string, programId: string, set: Set<string>) {
+  try {
+    localStorage.setItem(transferStorageKey(planId, programId), JSON.stringify([...set]));
+  } catch { /* ignore */ }
+}
+
 export default function ProgressModal({ onClose, planId, programId, completedEntries, planEntries, courseMap }: Props) {
   const [progress, setProgress] = useState<DegreeProgress | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [transferCredits, setTransferCredits] = useState<Set<string>>(new Set());
+
+  // Hydrate transfer credits from localStorage when the plan/program changes.
+  useEffect(() => {
+    if (!programId) {
+      setTransferCredits(new Set());
+      return;
+    }
+    setTransferCredits(loadTransferCredits(planId, programId));
+  }, [planId, programId]);
+
+  // Stable key so the effect below reacts to set-content changes, not identity.
+  const transferKey = useMemo(() => [...transferCredits].sort().join('|'), [transferCredits]);
 
   useEffect(() => {
     if (!programId) {
       setProgress(null);
       return;
     }
+    let cancelled = false;
     setLoading(true);
     setError(null);
-    getProgress(planId, programId)
-      .then(setProgress)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load progress'))
-      .finally(() => setLoading(false));
-  }, [planId, programId]);
+    getProgress(planId, programId, transferCredits)
+      .then((p) => { if (!cancelled) setProgress(p); })
+      .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load progress'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+    // transferKey captures Set content; planId/programId capture identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId, programId, transferKey]);
+
+  const toggleTransfer = useCallback(
+    (key: string) => {
+      if (!programId) return;
+      setTransferCredits((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        saveTransferCredits(planId, programId, next);
+        return next;
+      });
+    },
+    [planId, programId],
+  );
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-white rounded-[14px] w-[720px] max-h-[84vh] flex flex-col shadow-[0_24px_64px_rgba(0,0,0,0.2)] overflow-hidden"
+        className="bg-white rounded-[14px] w-[760px] max-h-[84vh] flex flex-col shadow-[0_24px_64px_rgba(0,0,0,0.2)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-[22px] py-[18px] border-b border-black/[0.07] flex justify-between items-center shrink-0">
@@ -57,12 +107,17 @@ export default function ProgressModal({ onClose, planId, programId, completedEnt
         <div className="flex-1 overflow-y-auto px-[22px] py-5">
           {!programId ? (
             <FallbackProgress completedEntries={completedEntries} planEntries={planEntries} courseMap={courseMap} />
-          ) : loading ? (
+          ) : loading && !progress ? (
             <p className="text-sm text-gray-500">Loading progress…</p>
           ) : error ? (
             <p className="text-sm text-red-600">{error}</p>
           ) : progress ? (
-            <ProgressContent progress={progress} />
+            <ProgressContent
+              progress={progress}
+              transferCredits={transferCredits}
+              onToggleTransfer={toggleTransfer}
+              refreshing={loading}
+            />
           ) : null}
         </div>
       </div>
@@ -70,7 +125,17 @@ export default function ProgressModal({ onClose, planId, programId, completedEnt
   );
 }
 
-function ProgressContent({ progress }: { progress: DegreeProgress }) {
+function ProgressContent({
+  progress,
+  transferCredits,
+  onToggleTransfer,
+  refreshing,
+}: {
+  progress: DegreeProgress;
+  transferCredits: Set<string>;
+  onToggleTransfer: (key: string) => void;
+  refreshing: boolean;
+}) {
   const remaining = Math.max(0, progress.totalCredits - progress.completedCredits);
   const satisfied = progress.requirements.filter((r) => r.satisfied).length;
 
@@ -83,7 +148,7 @@ function ProgressContent({ progress }: { progress: DegreeProgress }) {
       </div>
 
       <div className="flex justify-between text-[13px] text-[#4a5565] mb-1.5">
-        <span>Total progress</span>
+        <span>Total progress {refreshing && <span className="text-[11px] text-gray-400 ml-1">updating…</span>}</span>
         <span className="font-semibold">{progress.completedCredits} / {progress.totalCredits} ({progress.percent}%)</span>
       </div>
       <div className="h-2.5 bg-[#e5e7eb] rounded-[5px] mb-[22px] overflow-hidden relative">
@@ -93,27 +158,50 @@ function ProgressContent({ progress }: { progress: DegreeProgress }) {
         />
       </div>
 
-      <div className="font-semibold text-sm mb-2.5">
-        Requirements — {satisfied} / {progress.requirements.length} satisfied
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="font-semibold text-sm">
+          Requirements — {satisfied} / {progress.requirements.length} satisfied
+        </span>
+        <span className="text-[11px] text-gray-500 italic">
+          Tip: toggle "Transfer" to mark a requirement satisfied by transfer credit.
+        </span>
       </div>
       <div className="border border-black/[0.08] rounded-[10px] overflow-hidden">
-        <div className="grid grid-cols-[1fr_70px_90px_90px] bg-[#f9f9f9] px-3.5 py-2 text-xs text-[#6b7280] font-semibold">
+        <div className="grid grid-cols-[1fr_70px_90px_90px_88px] bg-[#f9f9f9] px-3.5 py-2 text-xs text-[#6b7280] font-semibold">
           <span>Requirement</span>
           <span>Type</span>
           <span>Credits</span>
           <span>Status</span>
+          <span className="text-right">Transfer</span>
         </div>
         {progress.requirements.map((req) => (
-          <RequirementRow key={req.requirementId} req={req} />
+          <RequirementRow
+            key={req.requirementId}
+            req={req}
+            transferCredits={transferCredits}
+            onToggleTransfer={onToggleTransfer}
+          />
         ))}
       </div>
     </>
   );
 }
 
-function RequirementRow({ req }: { req: RequirementProgress }) {
+function RequirementRow({
+  req,
+  transferCredits,
+  onToggleTransfer,
+}: {
+  req: RequirementProgress;
+  transferCredits: Set<string>;
+  onToggleTransfer: (key: string) => void;
+}) {
+  // The whole-requirement transfer key matches the backend's expected format
+  // (see ProgressService.compute()'s `transferCredits` set).
+  const transferred = transferCredits.has(req.requirementId);
+
   return (
-    <div className="grid grid-cols-[1fr_70px_90px_90px] px-3.5 py-2.5 border-t border-black/[0.06] items-center">
+    <div className="grid grid-cols-[1fr_70px_90px_90px_88px] px-3.5 py-2.5 border-t border-black/[0.06] items-center">
       <div className="flex flex-col">
         <span className="text-[13px]">{req.requirementName}</span>
         {req.satisfyingCourseIds.length > 0 && (
@@ -139,6 +227,21 @@ function RequirementRow({ req }: { req: RequirementProgress }) {
           Pending
         </span>
       )}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => onToggleTransfer(req.requirementId)}
+          aria-pressed={transferred}
+          title={transferred ? 'Click to remove transfer credit' : 'Mark as satisfied by transfer credit'}
+          className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
+            transferred
+              ? 'bg-[#101828] text-white border-[#101828] hover:bg-[#1e293b]'
+              : 'bg-white text-[#4a5565] border-black/15 hover:bg-gray-50'
+          }`}
+        >
+          {transferred ? '✓ Transfer' : 'Transfer'}
+        </button>
+      </div>
     </div>
   );
 }

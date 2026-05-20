@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { PlanSummary, PlanWithEntries, CourseRow, AcademicGoal, EntryRow } from './types';
-import { getPlans, createPlan, deletePlan, getPlan, getCourses, seedCourses, deleteEntry } from './services/api';
+import { getPlans, createPlan, deletePlan, getPlan, getCourses, deleteEntry } from './services/api';
 import Sidebar from './components/Sidebar';
 import PlanBoard from './components/PlanBoard';
 import UploadModal from './components/UploadModal';
@@ -12,7 +12,6 @@ export default function App() {
   const [courseMap, setCourseMap] = useState<Map<string, CourseRow>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [seeding, setSeeding] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [goals, setGoals] = useState<AcademicGoal[]>([
     { id: '1', name: 'Computer Science Major', satisfied: false },
@@ -98,20 +97,6 @@ export default function App() {
     await Promise.all([loadPlan(selectedPlanId), loadPlans()]);
   }, [selectedPlanId, loadPlan, loadPlans]);
 
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      await seedCourses();
-      await new Promise(r => setTimeout(r, 2000));
-      await loadCourses();
-      alert('Courses seeded successfully');
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Seeding failed');
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   const handleAddGoal = () => {
     const name = prompt('Goal name:');
     if (!name?.trim()) return;
@@ -159,13 +144,6 @@ export default function App() {
         <p className="text-red-600 font-medium">Could not connect to server</p>
         <p className="text-gray-500 text-sm">{error}</p>
         <p className="text-gray-400 text-xs">Make sure the backend is running on port 3000</p>
-        <button
-          onClick={handleSeed}
-          disabled={seeding}
-          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-        >
-          {seeding ? 'Seeding...' : 'Seed course data'}
-        </button>
       </div>
     );
   }
@@ -188,19 +166,6 @@ export default function App() {
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {courseMap.size === 0 && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between">
-            <span className="text-xs text-amber-700">No courses in database — seed first</span>
-            <button
-              onClick={handleSeed}
-              disabled={seeding}
-              className="text-xs text-amber-700 border border-amber-300 rounded px-2 py-1 hover:bg-amber-100"
-            >
-              {seeding ? 'Seeding...' : 'Seed courses'}
-            </button>
-          </div>
-        )}
-
         {!plan ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
             <p className="text-base">No plan selected</p>

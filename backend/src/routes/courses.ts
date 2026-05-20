@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { courseService } from "../container";
-import { SEED_COURSES } from "../data/seed";
-import type { ApiError } from "../models/types";
+import type { ApiError } from "../dataModel";
 
 const router = Router();
 
@@ -38,17 +37,6 @@ router.get("/:id", async (req, res) => {
     res.json(course);
   } catch (err) {
     console.error("GET /courses/:id error:", err);
-    res.status(500).json({ error: "internal_error" } satisfies ApiError);
-  }
-});
-
-// POST /api/v1/courses/seed
-router.post("/seed", async (_req, res) => {
-  try {
-    const count = await courseService.seed(SEED_COURSES);
-    res.status(202).json({ message: `Seeded ${count} courses` });
-  } catch (err) {
-    console.error("POST /courses/seed error:", err);
     res.status(500).json({ error: "internal_error" } satisfies ApiError);
   }
 });

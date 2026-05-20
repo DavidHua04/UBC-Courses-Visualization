@@ -1,5 +1,5 @@
 import type {
-  CourseFilter,
+  CourseSelector,
   CourseRow,
   DegreeProgress,
   DegreeRequirement,
@@ -7,12 +7,10 @@ import type {
   Program,
   RequirementMatcher,
   RequirementProgress,
-} from "../models/types";
-import type {
   ICourseRepository,
   IPlanEntryRepository,
   IProgramRepository,
-} from "../repositories/interfaces";
+} from "../dataModel";
 
 const COUNTED_STATUSES = new Set(["planned", "in_progress", "completed"]);
 
@@ -26,7 +24,7 @@ function courseCredits(c: CourseRow): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-export function matchCourses(filter: CourseFilter, courses: CourseRow[]): CourseRow[] {
+export function matchCourses(filter: CourseSelector, courses: CourseRow[]): CourseRow[] {
   return courses.filter((c) => {
     if (filter.excludeIds?.includes(c.id)) return false;
     if (filter.includeIds?.includes(c.id)) return true;
@@ -51,10 +49,22 @@ interface MatcherResult {
   satisfyingIds: string[];
 }
 
+export interface EvaluateOptions {
+  /** Stable id of the owning requirement — used to namespace transfer-credit keys. */
+  requirementId?: string;
+  /**
+   * Set of strings that can mark a requirement (or a breadth subcategory) as
+   * satisfied externally.  Keys are `${requirementId}` for whole-requirement
+   * overrides and `${requirementId}-${categoryKey}` for breadth subcategories.
+   */
+  transferCredits?: Set<string>;
+}
+
 export function evaluateMatcher(
   matcher: RequirementMatcher,
   completed: CourseRow[],
   requiredCredits: number,
+  options: EvaluateOptions = {},
 ): MatcherResult {
   switch (matcher.type) {
     case "courses_one_of": {
@@ -102,11 +112,15 @@ export function evaluateMatcher(
     case "breadth_categories": {
       const satisfyingIds: string[] = [];
       let satisfiedCount = 0;
-      for (const filter of Object.values(matcher.categories)) {
+      for (const [key, filter] of Object.entries(matcher.categories)) {
         const matched = matchCourses(filter, completed);
+        const transferKey = options.requirementId ? `${options.requirementId}-${key}` : null;
+        const hasTransfer = transferKey ? options.transferCredits?.has(transferKey) ?? false : false;
         if (matched.length > 0) {
           satisfiedCount++;
           satisfyingIds.push(matched[0].id);
+        } else if (hasTransfer) {
+          satisfiedCount++;
         }
       }
       return {
@@ -129,8 +143,17 @@ export class ProgressService {
   /**
    * Compute degree progress for a plan against a program.
    * Counts entries with status in {planned, in_progress, completed}; "failed" is excluded.
+   *
+   * @param transferCredits Optional set of identifiers marking requirements as
+   *   externally satisfied.  Keys are `${requirementId}` for whole-requirement
+   *   transfer credit, or `${requirementId}-${categoryKey}` for individual
+   *   breadth subcategories.
    */
-  async compute(planId: string, programId: string): Promise<DegreeProgress | null> {
+  async compute(
+    planId: string,
+    programId: string,
+    transferCredits?: Set<string>,
+  ): Promise<DegreeProgress | null> {
     const program = await this.programs.findProgramById(programId);
     if (!program) return null;
     const faculty = await this.programs.findFacultyById(program.facultyId);
@@ -140,7 +163,7 @@ export class ProgressService {
     const courseIds = Array.from(new Set(countedEntries.map((e) => e.courseId)));
     const courses = await this.courses.findByIds(courseIds);
 
-    const totalCredits = courses.reduce((s, c) => s + courseCredits(c), 0);
+    let totalCredits = courses.reduce((s, c) => s + courseCredits(c), 0);
 
     const combinedReqs: DegreeRequirement[] = [
       ...(faculty?.requirements ?? []),
@@ -148,14 +171,29 @@ export class ProgressService {
     ];
 
     const requirements: RequirementProgress[] = combinedReqs.map((req) => {
-      const r = evaluateMatcher(req.matcher, courses, req.credits);
+      const r = evaluateMatcher(req.matcher, courses, req.credits, {
+        requirementId: req.id,
+        transferCredits,
+      });
+
+      // Whole-requirement transfer credit overlay: only applies when courses
+      // alone did NOT satisfy the requirement (avoids double-counting).
+      let satisfied = r.satisfied;
+      let completedCredits = r.completedCredits;
+      if (!satisfied && transferCredits?.has(req.id)) {
+        satisfied = true;
+        completedCredits = r.requiredCredits;
+        // Reflect the transferred credits in the running degree total
+        totalCredits += req.credits;
+      }
+
       return {
         requirementId: req.id,
         requirementName: req.name,
         requirementType: req.type,
-        completedCredits: r.completedCredits,
+        completedCredits,
         requiredCredits: r.requiredCredits,
-        satisfied: r.satisfied,
+        satisfied,
         satisfyingCourseIds: r.satisfyingIds,
       };
     });

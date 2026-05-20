@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { planService, validationService, courseService, progressService, recommendationsService } from "../container";
-import type { ApiError } from "../models/types";
+import type { ApiError } from "../dataModel";
 
 const router = Router();
 
@@ -241,7 +241,7 @@ router.get("/:id/validate", async (req, res) => {
   }
 });
 
-// GET /api/v1/plans/:id/progress?programId=cs-major
+// GET /api/v1/plans/:id/progress?programId=cs-major&transferCredits=req1,req2,sci-breadth-mathematics
 router.get("/:id/progress", async (req, res) => {
   try {
     const programId = typeof req.query.programId === "string" ? req.query.programId : null;
@@ -258,7 +258,12 @@ router.get("/:id/progress", async (req, res) => {
       return res.status(404).json({ error: "not_found", message: "Plan not found" } satisfies ApiError);
     }
 
-    const result = await progressService.compute(req.params.id, programId);
+    const transferCreditsRaw = typeof req.query.transferCredits === "string" ? req.query.transferCredits : "";
+    const transferCredits = transferCreditsRaw
+      ? new Set(transferCreditsRaw.split(",").map((s) => s.trim()).filter(Boolean))
+      : undefined;
+
+    const result = await progressService.compute(req.params.id, programId, transferCredits);
     if (!result) {
       return res.status(404).json({ error: "not_found", message: "Program not found" } satisfies ApiError);
     }

@@ -13,7 +13,6 @@ import request from "supertest";
 const mockCourseService = vi.hoisted(() => ({
   list: vi.fn(),
   getById: vi.fn(),
-  seed: vi.fn(),
 }));
 
 const mockPlanService = vi.hoisted(() => ({
@@ -288,37 +287,6 @@ describe("API Specification Tests", () => {
       const res = await request(app).get("/api/v1/courses/CPSC110");
 
       expect(res.body.prerequisites).toBeNull();
-    });
-  });
-
-  // ── 4.3 Seed Courses ──────────────────────────────────────────────────────
-
-  describe("4.3 POST /api/v1/courses/seed — seedCourses", () => {
-    it("returns 202 with a message and jobId", async () => {
-      mockCourseService.seed.mockResolvedValueOnce(29);
-
-      const res = await request(app).post("/api/v1/courses/seed");
-
-      expect(res.status).toBe(202);
-      expect(res.body).toHaveProperty("message");
-    });
-
-    it("is idempotent — can be called multiple times", async () => {
-      mockCourseService.seed.mockResolvedValue(29);
-
-      const res1 = await request(app).post("/api/v1/courses/seed");
-      const res2 = await request(app).post("/api/v1/courses/seed");
-
-      expect(res1.status).toBe(202);
-      expect(res2.status).toBe(202);
-    });
-
-    it("does not require a request body", async () => {
-      mockCourseService.seed.mockResolvedValueOnce(29);
-
-      const res = await request(app).post("/api/v1/courses/seed");
-
-      expect(res.status).toBe(202);
     });
   });
 

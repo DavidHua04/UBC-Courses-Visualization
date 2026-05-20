@@ -6,7 +6,6 @@ import request from "supertest";
 const mockCourseService = vi.hoisted(() => ({
   list: vi.fn(),
   getById: vi.fn(),
-  seed: vi.fn(),
 }));
 
 const mockPlanService = vi.hoisted(() => ({

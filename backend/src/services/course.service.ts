@@ -1,5 +1,9 @@
-import type { CourseRow } from "../models/types";
-import type { ICourseRepository, CourseFilter, CourseListResult } from "../repositories/interfaces";
+import type {
+  CourseRow,
+  ICourseRepository,
+  CourseFilter,
+  CourseListResult,
+} from "../dataModel";
 
 export class CourseService {
   constructor(private courses: ICourseRepository) {}
@@ -10,9 +14,5 @@ export class CourseService {
 
   async getById(id: string): Promise<CourseRow | null> {
     return this.courses.findById(id);
-  }
-
-  async seed(seedData: CourseRow[]): Promise<number> {
-    return this.courses.seedAll(seedData);
   }
 }

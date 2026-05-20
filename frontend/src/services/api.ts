@@ -35,9 +35,6 @@ export const getCourses = async (search?: string): Promise<CourseRow[]> => {
 export const getCourse = (id: string): Promise<CourseRow> =>
   request(`${BASE}/courses/${id}`);
 
-export const seedCourses = (): Promise<{ message: string; jobId: string }> =>
-  request(`${BASE}/courses/seed`, { method: 'POST' });
-
 // Plans
 export const getPlans = (): Promise<PlanSummary[]> =>
   request(`${BASE}/plans`);
@@ -116,8 +113,22 @@ export const getProgram = async (id: string): Promise<Program> => {
 };
 
 // Progress
-export const getProgress = (planId: string, programId: string): Promise<DegreeProgress> =>
-  request(`${BASE}/plans/${planId}/progress?programId=${encodeURIComponent(programId)}`);
+//
+// `transferCredits` lets the caller mark requirements (or breadth subcategories
+// like `sci-breadth-mathematics`) as satisfied externally — see the backend's
+// ProgressService.compute() doc for the key format.
+export const getProgress = (
+  planId: string,
+  programId: string,
+  transferCredits?: Iterable<string>,
+): Promise<DegreeProgress> => {
+  const params = new URLSearchParams({ programId });
+  if (transferCredits) {
+    const list = Array.from(transferCredits);
+    if (list.length > 0) params.set('transferCredits', list.join(','));
+  }
+  return request(`${BASE}/plans/${planId}/progress?${params.toString()}`);
+};
 
 // Recommendations
 export const getRecommendations = async (

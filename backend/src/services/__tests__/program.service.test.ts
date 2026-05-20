@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { ProgramService } from "../program.service";
-import type { IProgramRepository } from "../../repositories/interfaces";
-import type { Faculty, Program } from "../../models/types";
+import type { IProgramRepository, Faculty, Program } from "../../dataModel";
 
 class InMemoryProgramRepo implements IProgramRepository {
   constructor(public faculties: Faculty[], public programs: Program[]) {}

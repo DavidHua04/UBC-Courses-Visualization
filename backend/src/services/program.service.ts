@@ -1,5 +1,4 @@
-import type { Faculty, Program } from "../models/types";
-import type { IProgramRepository } from "../repositories/interfaces";
+import type { Faculty, Program, IProgramRepository } from "../dataModel";
 
 export class ProgramService {
   constructor(private programs: IProgramRepository) {}

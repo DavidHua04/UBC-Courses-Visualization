@@ -6,7 +6,6 @@ import request from "supertest";
 const mockCourseService = vi.hoisted(() => ({
   list: vi.fn(),
   getById: vi.fn(),
-  seed: vi.fn(),
 }));
 
 const mockPlanService = vi.hoisted(() => ({
@@ -136,20 +135,6 @@ describe("Courses routes", () => {
 
       expect(res.status).toBe(404);
       expect(res.body.error).toBe("not_found");
-    });
-  });
-
-  // ── POST /api/v1/courses/seed ───────────────────────────────────────────
-
-  describe("POST /api/v1/courses/seed", () => {
-    it("seeds courses and returns 202", async () => {
-      mockCourseService.seed.mockResolvedValueOnce(29);
-
-      const res = await request(app).post("/api/v1/courses/seed");
-
-      expect(res.status).toBe(202);
-      expect(res.body.message).toContain("29");
-      expect(mockCourseService.seed).toHaveBeenCalledTimes(1);
     });
   });
 

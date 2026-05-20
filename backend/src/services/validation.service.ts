@@ -3,12 +3,10 @@ import type {
   ValidationResult,
   ValidationError,
   ValidationWarning,
-} from "../models/types";
-import type {
   ICourseRepository,
   IPlanEntryRepository,
   IValidationCache,
-} from "../repositories/interfaces";
+} from "../dataModel";
 
 const CREDIT_LIMIT_REGULAR = 18;
 const CREDIT_LIMIT_SUMMER = 9;
