@@ -19,7 +19,16 @@
       "PowerShell(Get-Content *)",
       "PowerShell($j=Get-Content -Raw 'D:\\\\Study\\\\personal project\\\\UBC-Courses-Visualization\\\\backend\\\\data\\\\programs.json' | ConvertFrom-Json; \"Faculties: $\\($j.faculties.Count\\)\"; $j.faculties | Select-Object id, name -First 10 | Format-Table -AutoSize; \"---\"; \"Programs: $\\($j.programs.Count\\)\"; \"First 5 programs:\"; $j.programs | Select-Object id, name, facultyId -First 5 | Format-Table -AutoSize; \"---\"; \"Sample science-faculty programs:\"; \\($j.programs | Where-Object { $_.facultyId -eq 'science' } | Select-Object -First 5\\).foreach\\({ \"{0,-50} {1}\" -f $_.id, $_.name }\\))",
       "Bash(npm install *)",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "mcp__playwright-test__planner_setup_page",
+      "mcp__playwright-test__browser_navigate",
+      "mcp__playwright-test__planner_save_plan",
+      "mcp__playwright-test__generator_setup_page",
+      "mcp__playwright-test__generator_write_test",
+      "mcp__playwright-test__generator_read_log"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright-test"
+  ]
 }
