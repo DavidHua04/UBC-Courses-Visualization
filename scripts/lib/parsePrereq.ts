@@ -142,6 +142,13 @@ function parseExpression(s: string): PrereqRule | null {
     return makeGroup(rules, "all_of");
   }
 
+  // "3 credits of A or B" is one credit pool, not an or-choice — when the
+  // whole expression is a credit phrase, it wins over the or-split.
+  if (/^(?:at least\s+)?\d+\s+credits?\s+(?:of|from)\s/i.test(s)) {
+    const credit = parseCreditPhrase(s);
+    if (credit) return credit;
+  }
+
   const orParts = splitTopLevel(s, " or ");
   if (orParts) {
     const rules = orParts.map(parseExpression).filter((r): r is PrereqRule => r !== null);

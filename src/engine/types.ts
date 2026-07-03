@@ -168,10 +168,14 @@ export type IssueKind =
   | "prereq_unknown" // prose exists but was not machine-readable; needs human judgment
   | "coreq_missing"
   | "duplicate_course"
+  | "unknown_course"
   | "term_overload";
+
+export type IssueSeverity = "error" | "warning";
 
 export interface EntryIssue {
   kind: Exclude<IssueKind, "term_overload">;
+  severity: IssueSeverity;
   entryId: string;
   courseId: string;
   message: string;
