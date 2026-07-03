@@ -307,15 +307,17 @@ function RequirementRow({
               )}
             </div>
           )}
-          <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-faint">
-            <input
-              type="checkbox"
-              checked={rp.exempted || plan.exemptions.includes(req.id)}
-              onChange={() => toggleExemption(req.id)}
-              className="size-3 accent-navy"
-            />
-            Covered by transfer credit or an exception
-          </label>
+          {(!rp.satisfied || rp.exempted || plan.exemptions.includes(req.id)) && (
+            <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-ink-faint">
+              <input
+                type="checkbox"
+                checked={rp.exempted || plan.exemptions.includes(req.id)}
+                onChange={() => toggleExemption(req.id)}
+                className="size-3 accent-navy"
+              />
+              Covered by transfer credit or an exception
+            </label>
+          )}
         </div>
       </div>
     </li>

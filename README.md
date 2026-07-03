@@ -1,113 +1,64 @@
-# UBC Degree Planner
+# Degree Map — UBC course planner
 
-A web application that helps UBC students build, validate, and visualize multi-year degree plans. Students can test "what-if" scenarios, track prerequisite requirements in real time, and see a clear map of their academic progress toward graduation.
+Plan a UBC degree term by term, with the full real catalog and live
+prerequisite checking. Search 7,269 courses, drop them onto a year-by-term
+board, and see immediately whether you're eligible, what each course unlocks,
+and how far you are from graduating.
 
-## Features
+Everything runs in your browser: plans live in localStorage, export to JSON,
+and travel whole inside a share link. There is no server and no account.
 
-### Dynamic Plan Validation & "What-If" Scenario Testing
-- Build a multi-year course plan organized by term (Winter, Spring, Summer)
-- Drag-and-drop courses between terms to test different arrangements
-- Instant validation against prerequisite rules, credit limits, and degree requirements
-- Real-time error highlighting (e.g., "You cannot take CPSC 344 without CPSC 210 or CPEN 221")
-- Create and compare multiple simulated plans side-by-side
+## What it does
 
-### Academic Progress & Requirement Mapping
-- Upload completed courses to establish your transcript
-- Visual credit progress bar (completed vs. planned vs. total required)
-- Academic goals tracking with met/not-met status indicators
-- Degree requirement checklist broken down by year standing
-- Estimated graduation timeline based on your current plan
+- **Search with live eligibility** — every result carries a dot showing
+  whether you could take that course in the currently selected term:
+  prerequisites met, not met, needs your judgment (prose rules like
+  "third-year standing"), or already in your plan.
+- **Prerequisites as proof trees** — course rules render as nested
+  ALL OF / ONE OF logic with a ✓/✗ per leaf, so you see *which branch*
+  fails, and whether the missing course is planned in a later term
+  (ordering problem) or absent entirely.
+- **Unlocks** — the reverse prerequisite graph, precomputed across the whole
+  catalog: pick CPSC 110 and see the courses it opens up.
+- **Whole-plan validation** — prerequisite order, corequisites, duplicates,
+  retakes after failure, and term credit loads, recomputed on every change.
+- **Degree progress** — track a program's requirements (CS major fully
+  specified) with per-requirement meters, satisfying courses, and
+  transfer-credit exemptions.
+- **What-if scenarios** — duplicate a plan in one click and rearrange it;
+  switch between plans freely.
 
-### Course Search & Discovery
-- Search courses by code, name, or department
-- Filter by department and level
-- View course details including credits, description, and prerequisites
-- Quick-add courses directly from search results into your plan
-
-## Prototype
-
-| Plan Builder | Course Search | Validation | Progress View |
-|:---:|:---:|:---:|:---:|
-| ![Plan Builder](reference/Task%201,%202%20Start.png) | ![Course Search](reference/Task%202-2.png) | ![Validation](reference/Task%202-2-2-2-2.png) | ![Progress](reference/Plan.png) |
-
-> Full design on [Figma](https://www.figma.com/design/c7CLJiZvlwFrpx4Og1MQz9/UBC-Degree-PLanner?node-id=152-988&t=UbGVylrJVHtihFET-0)
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | TypeScript, React, Tailwind CSS |
-| Backend | TypeScript, Express |
-
-## Repository Structure
-
-```
-UBC-Degree-Planner/
-├── backend/                # Express API server
-│   ├── src/
-│   │   ├── routes/         # API route handlers
-│   │   ├── services/       # Business logic (validation, planning)
-│   │   ├── models/         # Data models & types
-│   │   └── index.ts        # Server entry point
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/               # React SPA
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Page-level components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── types/          # Shared TypeScript types
-│   │   ├── services/       # API client functions
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── tsconfig.json
-├── reference/              # Figma prototype screenshots
-├── README.md
-└── LICENSE
-```
-
-## Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- npm or yarn
-
-### Installation
+## Run it
 
 ```bash
-git clone https://github.com/DavidHua04/UBC-Courses-Visualization.git
-cd UBC-Courses-Visualization
-```
-
-**Backend:**
-```bash
-cd backend
 npm install
-npm run dev
+npm run data     # data/source → public/data (also runs as part of build)
+npm run dev      # http://localhost:5173
 ```
 
-**Frontend:**
+Other commands:
+
 ```bash
-cd frontend
-npm install
-npm run dev
+npm run test     # engine + parser unit tests (vitest)
+npm run build    # data + typecheck + production bundle
+npm run preview  # serve the production build
+npm run e2e      # browser smoke test against the preview server
 ```
 
-The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`.
+Deploy by putting `dist/` on any static host.
 
-## Contributing
+## How it's built
 
-Contributions are welcome! To contribute:
+```
+data/source/      scraped UBC catalog + program specs (checked in)
+scripts/          build-data.ts → public/data/ (index, dept chunks,
+                  unlocks graph, programs); prose→rule-tree parser
+src/engine/       pure domain logic: prereq evaluation, plan validation,
+                  requirement matching, degree progress — all unit tested
+src/catalog/      static-data client: upfront search index, lazy dept chunks
+src/state/        Zustand store, localStorage persistence, share links
+src/ui/           React components (three-zone workspace)
+```
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -m "Add your message here"`
-4. Push the branch: `git push origin feature/your-feature-name`
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The design rationale — why there's no backend, what was kept from the
+original full-stack version, and the UX decisions — is in [PLAN.md](PLAN.md).
