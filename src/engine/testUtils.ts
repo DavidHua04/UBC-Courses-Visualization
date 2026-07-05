@@ -1,7 +1,7 @@
 // Shared builders for engine tests.
 
 import type { Course, Plan, PlanEntry, PrereqRule, Term, EntryStatus } from "./types";
-import { deptOf } from "./types";
+import { deptOf, emptyAdvisorState } from "./types";
 
 export function course(id: string, overrides: Partial<Course> = {}): Course {
   return {
@@ -45,6 +45,7 @@ export function plan(entries: PlanEntry[], overrides: Partial<Plan> = {}): Plan 
     entries,
     shortlist: [],
     exemptions: [],
+    advisor: emptyAdvisorState(),
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,

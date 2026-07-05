@@ -97,6 +97,40 @@ export interface PlanEntry {
   creditsOverride?: number;
 }
 
+// ── AI advisor (per-plan, serializable) ─────────────────────────────
+
+export interface AdvisorProfile {
+  /** Freeform goal text, e.g. "graduate in 3 years, then an ML PhD". */
+  goal: string;
+  targetYears?: number;
+  interests?: string[];
+}
+
+export interface AdvisorRecommendation {
+  courseId: string;
+  reason: string;
+}
+
+export interface AdvisorMessage {
+  id: string;
+  role: "user" | "assistant";
+  /** Raw text as sent/received; assistant replies keep their fenced JSON. */
+  content: string;
+  createdAt: string;
+  /** Parsed + catalog-validated at receive time. */
+  recommendations?: AdvisorRecommendation[];
+}
+
+export interface AdvisorState {
+  profile: AdvisorProfile;
+  messages: AdvisorMessage[];
+}
+
+export const emptyAdvisorState = (): AdvisorState => ({
+  profile: { goal: "" },
+  messages: [],
+});
+
 export interface Plan {
   id: string;
   name: string;
@@ -108,6 +142,9 @@ export interface Plan {
   shortlist: string[];
   /** Requirement ids (or `${reqId}:${categoryKey}`) satisfied externally, e.g. transfer credit. */
   exemptions: string[];
+  /** AI advisor conversation + goal. Travels with duplicate/export/import,
+   *  but is stripped from share URLs (size + privacy). */
+  advisor: AdvisorState;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { Plan } from "../engine/types";
+import { emptyAdvisorState } from "../engine/types";
 import { planToShareUrl, useStore } from "../state/store";
 
 function BarButton({
@@ -64,6 +65,8 @@ export function TopBar({ plan }: { plan: Plan }) {
         if (!parsed || !Array.isArray(parsed.entries)) throw new Error("bad shape");
         parsed.exemptions ??= [];
         parsed.years ??= 4;
+        parsed.shortlist ??= [];
+        parsed.advisor ??= emptyAdvisorState();
         importPlan(parsed);
       } catch {
         alert("That file doesn't look like an exported plan.");

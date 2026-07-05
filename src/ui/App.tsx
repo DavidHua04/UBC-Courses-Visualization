@@ -81,8 +81,11 @@ export function App() {
     ids.push(...(plan.shortlist ?? []));
     for (const lite of results) ids.push(lite[0]);
     if (selectedCourseId) ids.push(selectedCourseId);
+    for (const m of plan.advisor.messages) {
+      for (const rec of m.recommendations ?? []) ids.push(rec.courseId);
+    }
     return ids;
-  }, [plan.entries, plan.shortlist, results, selectedCourseId]);
+  }, [plan.entries, plan.shortlist, plan.advisor.messages, results, selectedCourseId]);
   useEnsureCourses(neededIds);
 
   const courseMap = useMemo(() => new Map(Object.entries(courses)), [courses]);

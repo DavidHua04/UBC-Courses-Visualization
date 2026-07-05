@@ -12,6 +12,7 @@ import { computeProgress } from "../engine/progress";
 import { checkEligibility, takenBefore, type CourseMap } from "../engine/validate";
 import { useStore, type InsightTab } from "../state/store";
 import { RuleTree } from "./RuleTree";
+import { AdvisorTab } from "./AdvisorTab";
 import { describeEligibility, EligibilityDot } from "./bits";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -432,6 +433,7 @@ export function InsightPanel({
     { id: "course", label: "Course" },
     { id: "plan", label: "Plan", badge: errorCount },
     { id: "degree", label: "Degree" },
+    { id: "advisor", label: "Advisor" },
   ];
 
   return (
@@ -460,6 +462,7 @@ export function InsightPanel({
         {tab === "course" && <CourseTab plan={plan} courseMap={courseMap} />}
         {tab === "plan" && <PlanTab plan={plan} report={report} />}
         {tab === "degree" && <DegreeTab plan={plan} programs={programs} courseMap={courseMap} />}
+        {tab === "advisor" && <AdvisorTab plan={plan} courseMap={courseMap} />}
       </div>
     </aside>
   );
