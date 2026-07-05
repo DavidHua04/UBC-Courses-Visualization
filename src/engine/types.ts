@@ -103,6 +103,9 @@ export interface Plan {
   programId: string | null;
   years: number; // how many year rows the board shows
   entries: PlanEntry[];
+  /** Course ids under consideration but not yet committed to a term.
+   *  Purely a staging tray — invisible to validation and progress. */
+  shortlist: string[];
   /** Requirement ids (or `${reqId}:${categoryKey}`) satisfied externally, e.g. transfer credit. */
   exemptions: string[];
   createdAt: string;

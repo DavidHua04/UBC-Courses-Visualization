@@ -108,6 +108,72 @@ function EntryCard({
   );
 }
 
+function ShortlistCard({ courseId, courseMap }: { courseId: string; courseMap: CourseMap }) {
+  const selectCourse = useStore((s) => s.selectCourse);
+  const removeFromShortlist = useStore((s) => s.removeFromShortlist);
+  const selected = useStore((s) => s.selectedCourseId) === courseId;
+  const course = courseMap.get(courseId);
+
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `short:${courseId}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={() => selectCourse(courseId)}
+      title={course?.title}
+      className={`group flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-paper px-2 py-1 shadow-xs transition-colors hover:border-navy ${
+        selected ? "outline-2 outline-navy" : ""
+      } ${isDragging ? "opacity-40" : ""}`}
+    >
+      <span className="font-mono text-xs font-semibold">{displayId(courseId)}</span>
+      <span className="text-[10px] text-ink-faint">{course?.credits ?? "–"} cr</span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          removeFromShortlist(courseId);
+        }}
+        title="Remove from shortlist"
+        className="invisible -mr-0.5 rounded px-0.5 text-ink-faint hover:text-unmet group-hover:visible"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+function ShortlistSection({ plan, courseMap }: { plan: Plan; courseMap: CourseMap }) {
+  const { setNodeRef, isOver } = useDroppable({ id: "shortlist" });
+  const ids = plan.shortlist ?? [];
+
+  return (
+    <section>
+      <h2 className="mb-1.5 font-display text-sm font-semibold text-ink-soft">Shortlist</h2>
+      <p className="mb-1.5 text-[11px] text-ink-faint">
+        Courses you're interested in but haven't committed to a term. Collect them here first,
+        then drag one onto a term when you decide — or drag a planned course back here.
+      </p>
+      <div
+        ref={setNodeRef}
+        className={`flex min-h-11 flex-wrap items-start gap-1.5 rounded-lg border p-1.5 transition-colors ${
+          isOver ? "border-gold-bright bg-gold-wash" : "border-dashed border-line-soft bg-paper"
+        }`}
+      >
+        {ids.length === 0 ? (
+          <p className="px-1 py-1 text-[11px] text-ink-faint">
+            Nothing shortlisted yet — drag a search result here, or click ☆ on a result.
+          </p>
+        ) : (
+          ids.map((id) => <ShortlistCard key={id} courseId={id} courseMap={courseMap} />)
+        )}
+      </div>
+    </section>
+  );
+}
+
 // Stages the term-header click steps through. Failed is deliberately not
 // in the loop — it's per-course history, never set in bulk.
 const TERM_STATUS_CYCLE: EntryStatus[] = ["planned", "in_progress", "completed"];
@@ -257,6 +323,8 @@ export function Board({
   return (
     <main className="min-w-0 flex-1 overflow-auto bg-well/40 p-4">
       <div className="min-w-[560px] space-y-4">
+        <ShortlistSection plan={plan} courseMap={courseMap} />
+
         <section>
           <h2 className="mb-1.5 font-display text-sm font-semibold text-ink-soft">
             Transfer / Prior Credit

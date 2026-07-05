@@ -43,6 +43,7 @@ export function plan(entries: PlanEntry[], overrides: Partial<Plan> = {}): Plan 
     programId: null,
     years: 4,
     entries,
+    shortlist: [],
     exemptions: [],
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",

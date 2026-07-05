@@ -95,14 +95,25 @@ function CourseTab({
               : describeEligibility(elig)}
           </span>
         </div>
-        {!entry && (
-          <button
-            onClick={() => addEntry(course.id, target.year, target.term)}
-            className="mt-2 rounded-md bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-hover"
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {!entry && (
+            <button
+              onClick={() => addEntry(course.id, target.year, target.term)}
+              className="rounded-md bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-hover"
+            >
+              Add to {slotLabel(target.year, target.term)}
+            </button>
+          )}
+          <a
+            href={`https://ubcgrades.com/statistics-by-course#UBCV-${course.dept}-${course.number}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-md border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-navy hover:text-navy"
+            title={`Grade distribution for ${displayId(course.id)} on UBCGrades`}
           >
-            Add to {slotLabel(target.year, target.term)}
-          </button>
-        )}
+            Past Course Avg at UBCGrades ↗
+          </a>
+        </div>
       </div>
 
       <div>

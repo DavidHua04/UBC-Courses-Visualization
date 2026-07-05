@@ -54,6 +54,8 @@ export function App() {
   const selectedCourseId = useStore((s) => s.selectedCourseId);
   const addEntry = useStore((s) => s.addEntry);
   const moveEntry = useStore((s) => s.moveEntry);
+  const removeEntry = useStore((s) => s.removeEntry);
+  const addToShortlist = useStore((s) => s.addToShortlist);
   const selectCourse = useStore((s) => s.selectCourse);
 
   // One-time bootstrap: catalog index, programs, and share-link import.
@@ -72,41 +74,62 @@ export function App() {
     [index, query],
   );
 
-  // Full records needed for validation (plan) and eligibility (results, selection).
+  // Full records needed for validation (plan), eligibility (results,
+  // selection), and shortlist chips (credits/title).
   const neededIds = useMemo(() => {
     const ids = plan.entries.map((e) => e.courseId);
+    ids.push(...(plan.shortlist ?? []));
     for (const lite of results) ids.push(lite[0]);
     if (selectedCourseId) ids.push(selectedCourseId);
     return ids;
-  }, [plan.entries, results, selectedCourseId]);
+  }, [plan.entries, plan.shortlist, results, selectedCourseId]);
   useEnsureCourses(neededIds);
 
   const courseMap = useMemo(() => new Map(Object.entries(courses)), [courses]);
   const report = useMemo(() => validatePlan(plan, courseMap), [plan, courseMap]);
 
   // ── Drag and drop ─────────────────────────────────────────────────
-  // Draggables: board entries (id = entry id) and catalog rows ("cat:CPSC210").
-  // Droppables: term cells ("cell:2:W1").
+  // Draggables: board entries (id = entry id), catalog rows ("cat:CPSC210"),
+  // and shortlist chips ("short:CPSC210").
+  // Droppables: term cells ("cell:2:W1") and the shortlist tray ("shortlist").
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const [dragLabel, setDragLabel] = useState<string | null>(null);
 
+  const dragCourseId = (activeId: string): string | undefined =>
+    activeId.startsWith("cat:")
+      ? activeId.slice(4)
+      : activeId.startsWith("short:")
+        ? activeId.slice(6)
+        : plan.entries.find((en) => en.id === activeId)?.courseId;
+
   const onDragStart = (e: DragStartEvent) => {
-    const id = String(e.active.id);
-    const courseId = id.startsWith("cat:")
-      ? id.slice(4)
-      : plan.entries.find((en) => en.id === id)?.courseId;
+    const courseId = dragCourseId(String(e.active.id));
     setDragLabel(courseId ? displayId(courseId) : null);
   };
 
   const onDragEnd = (e: DragEndEvent) => {
     setDragLabel(null);
     const overId = e.over ? String(e.over.id) : null;
-    if (!overId || !overId.startsWith("cell:")) return;
+    if (!overId) return;
+    const activeId = String(e.active.id);
+
+    if (overId === "shortlist") {
+      if (activeId.startsWith("short:")) return;
+      const courseId = dragCourseId(activeId);
+      if (!courseId) return;
+      // A board entry dropped here goes back to "considering" — the entry
+      // leaves the plan and only the course id is kept.
+      if (!activeId.startsWith("cat:")) removeEntry(activeId);
+      addToShortlist(courseId);
+      selectCourse(courseId);
+      return;
+    }
+
+    if (!overId.startsWith("cell:")) return;
     const [, yearStr, term] = overId.split(":");
     const year = Number(yearStr);
-    const activeId = String(e.active.id);
-    if (activeId.startsWith("cat:")) {
-      const courseId = activeId.slice(4);
+    if (activeId.startsWith("cat:") || activeId.startsWith("short:")) {
+      const courseId = dragCourseId(activeId)!;
       addEntry(courseId, year, term as Term);
       selectCourse(courseId);
     } else {

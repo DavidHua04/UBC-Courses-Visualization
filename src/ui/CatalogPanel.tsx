@@ -18,12 +18,15 @@ function ResultRow({
 }) {
   const target = useStore((s) => s.target);
   const addEntry = useStore((s) => s.addEntry);
+  const addToShortlist = useStore((s) => s.addToShortlist);
+  const removeFromShortlist = useStore((s) => s.removeFromShortlist);
   const selectCourse = useStore((s) => s.selectCourse);
   const selected = useStore((s) => s.selectedCourseId) === liteId(lite);
 
   const id = liteId(lite);
   const elig = course ? checkEligibility(course, target.year, target.term, plan, courseMap) : null;
   const inPlan = elig?.kind === "already_planned";
+  const shortlisted = (plan.shortlist ?? []).includes(id);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `cat:${id}`,
@@ -59,17 +62,39 @@ function ResultRow({
       {inPlan ? (
         <span className="shrink-0 text-[10px] text-ink-faint">in plan</span>
       ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            addEntry(id, target.year, target.term);
-            selectCourse(id);
-          }}
-          title={`Add to ${slotLabel(target.year, target.term)}`}
-          className="invisible shrink-0 rounded-md border border-line bg-paper px-2 py-0.5 text-xs font-semibold text-navy group-hover:visible hover:border-navy"
-        >
-          + Add
-        </button>
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (shortlisted) removeFromShortlist(id);
+              else addToShortlist(id);
+            }}
+            title={
+              shortlisted
+                ? "Shortlisted — click to remove"
+                : "Shortlist — keep it in mind, decide the term later"
+            }
+            aria-pressed={shortlisted}
+            className={`shrink-0 rounded px-0.5 text-sm leading-none ${
+              shortlisted
+                ? "text-gold hover:text-ink-faint"
+                : "invisible text-ink-faint group-hover:visible hover:text-gold"
+            }`}
+          >
+            {shortlisted ? "★" : "☆"}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              addEntry(id, target.year, target.term);
+              selectCourse(id);
+            }}
+            title={`Add to ${slotLabel(target.year, target.term)}`}
+            className="invisible shrink-0 rounded-md border border-line bg-paper px-2 py-0.5 text-xs font-semibold text-navy group-hover:visible hover:border-navy"
+          >
+            + Add
+          </button>
+        </>
       )}
     </div>
   );
@@ -103,7 +128,7 @@ export function CatalogPanel({
         <p className="mt-2 text-[11px] text-ink-faint">
           Adding to{" "}
           <span className="font-semibold text-gold">{slotLabel(target.year, target.term)}</span>{" "}
-          — click a term header to change
+          — click a term's <span className="font-bold">+</span> to change
         </p>
       </div>
 
@@ -132,7 +157,10 @@ export function CatalogPanel({
                 <span className="size-2 rounded-full bg-ink-faint" /> already in your plan
               </li>
             </ul>
-            <p className="mt-3">Drag a result onto the board, or use its + Add button.</p>
+            <p className="mt-3">
+              Drag a result onto the board, or use its + Add button. Not sure yet? Click ☆ to
+              shortlist it and decide the term later.
+            </p>
           </div>
         ) : results.length === 0 ? (
           <p className="px-4 py-6 text-xs text-ink-soft">

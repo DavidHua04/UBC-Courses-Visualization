@@ -31,6 +31,7 @@ function newPlan(name: string): Plan {
     programId: null,
     years: 4,
     entries: [],
+    shortlist: [],
     exemptions: [],
     createdAt: now,
     updatedAt: now,
@@ -78,6 +79,8 @@ interface PlannerState {
   cycleStatus(entryId: string): void;
   setTermStatus(year: number, term: Term, status: EntryStatus): void;
   setEntryCredits(entryId: string, credits: number | null): void;
+  addToShortlist(courseId: string): void;
+  removeFromShortlist(courseId: string): void;
   setYears(years: number): void;
   toggleExemption(key: string): void;
 }
@@ -88,6 +91,7 @@ function mutatePlan(state: PlannerState, fn: (plan: Plan) => void): Partial<Plan
   const plan: Plan = {
     ...state.plans[id],
     entries: [...state.plans[id].entries],
+    shortlist: [...(state.plans[id].shortlist ?? [])],
     exemptions: [...state.plans[id].exemptions],
   };
   fn(plan);
@@ -153,6 +157,7 @@ export const useStore = create<PlannerState>()(
               id: uid(),
               name: `${src.name} (copy)`,
               entries: src.entries.map((e) => ({ ...e, id: uid() })),
+              shortlist: [...(src.shortlist ?? [])],
               exemptions: [...src.exemptions],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -185,6 +190,8 @@ export const useStore = create<PlannerState>()(
               const status = year === TRANSFER_YEAR ? "completed" : "planned";
               const entry: PlanEntry = { id: uid(), courseId, year, term, status };
               p.entries.push(entry);
+              // Committing a shortlisted course to a term graduates it out of the tray.
+              p.shortlist = p.shortlist.filter((id) => id !== courseId);
               if (year > p.years) p.years = year;
             }),
           ),
@@ -231,6 +238,18 @@ export const useStore = create<PlannerState>()(
               );
             }),
           ),
+        addToShortlist: (courseId) =>
+          set((s) =>
+            mutatePlan(s, (p) => {
+              if (!p.shortlist.includes(courseId)) p.shortlist.push(courseId);
+            }),
+          ),
+        removeFromShortlist: (courseId) =>
+          set((s) =>
+            mutatePlan(s, (p) => {
+              p.shortlist = p.shortlist.filter((id) => id !== courseId);
+            }),
+          ),
         setEntryCredits: (entryId, credits) =>
           set((s) =>
             mutatePlan(s, (p) => {
@@ -258,7 +277,13 @@ export const useStore = create<PlannerState>()(
     },
     {
       name: "degree-map",
-      version: 1,
+      version: 2,
+      // v1 plans predate the shortlist tray.
+      migrate: (persisted) => {
+        const s = persisted as { plans: Record<string, Plan>; activePlanId: string | null };
+        for (const plan of Object.values(s.plans ?? {})) plan.shortlist ??= [];
+        return s;
+      },
       partialize: (s) => ({ plans: s.plans, activePlanId: s.activePlanId }),
     },
   ),
@@ -284,6 +309,7 @@ export function planFromHash(hash: string): Plan | null {
     if (!json) return null;
     const plan = JSON.parse(json) as Plan;
     if (!plan || !Array.isArray(plan.entries)) return null;
+    plan.shortlist ??= [];
     plan.exemptions ??= [];
     plan.years ??= 4;
     return plan;
