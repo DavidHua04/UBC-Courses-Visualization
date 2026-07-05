@@ -1,113 +1,144 @@
-# UBC Degree Planner
+# Degree Map — UBC course planner
 
-A web application that helps UBC students build, validate, and visualize multi-year degree plans. Students can test "what-if" scenarios, track prerequisite requirements in real time, and see a clear map of their academic progress toward graduation.
+Plan a UBC degree term by term, with the full real catalog and live
+prerequisite checking. Search 7,269 courses, drop them onto a year-by-term
+board, and see immediately whether you're eligible, what each course unlocks,
+and how far you are from graduating.
 
-## Features
+Everything runs in your browser: plans live in localStorage, export to JSON,
+and travel whole inside a share link. There is no server and no account.
 
-### Dynamic Plan Validation & "What-If" Scenario Testing
-- Build a multi-year course plan organized by term (Winter, Spring, Summer)
-- Drag-and-drop courses between terms to test different arrangements
-- Instant validation against prerequisite rules, credit limits, and degree requirements
-- Real-time error highlighting (e.g., "You cannot take CPSC 344 without CPSC 210 or CPEN 221")
-- Create and compare multiple simulated plans side-by-side
+## What it does
 
-### Academic Progress & Requirement Mapping
-- Upload completed courses to establish your transcript
-- Visual credit progress bar (completed vs. planned vs. total required)
-- Academic goals tracking with met/not-met status indicators
-- Degree requirement checklist broken down by year standing
-- Estimated graduation timeline based on your current plan
+- **Search with live eligibility** — every result carries a dot showing
+  whether you could take that course in the currently selected term:
+  prerequisites met, not met, needs your judgment (prose rules like
+  "third-year standing"), or already in your plan.
+- **Prerequisites as proof trees** — course rules render as nested
+  ALL OF / ONE OF logic with a ✓/✗ per leaf, so you see *which branch*
+  fails, and whether the missing course is planned in a later term
+  (ordering problem) or absent entirely.
+- **Unlocks** — the reverse prerequisite graph, precomputed across the whole
+  catalog: pick CPSC 110 and see the courses it opens up.
+- **Whole-plan validation** — prerequisite order, corequisites, duplicates,
+  retakes after failure, and term credit loads, recomputed on every change.
+- **Degree progress** — track a program's requirements (CS major fully
+  specified) with per-requirement meters, satisfying courses, and
+  transfer-credit exemptions.
+- **What-if scenarios** — duplicate a plan in one click and rearrange it;
+  switch between plans freely.
 
-### Course Search & Discovery
-- Search courses by code, name, or department
-- Filter by department and level
-- View course details including credits, description, and prerequisites
-- Quick-add courses directly from search results into your plan
+## Setup: installing Node.js and npm
 
-## Prototype
+This project needs **Node.js** (which includes `npm`, the tool that
+downloads dependencies and runs the scripts below). If you've never
+installed either, here's how — no prior experience assumed.
 
-| Plan Builder | Course Search | Validation | Progress View |
-|:---:|:---:|:---:|:---:|
-| ![Plan Builder](reference/Task%201,%202%20Start.png) | ![Course Search](reference/Task%202-2.png) | ![Validation](reference/Task%202-2-2-2-2.png) | ![Progress](reference/Plan.png) |
-
-> Full design on [Figma](https://www.figma.com/design/c7CLJiZvlwFrpx4Og1MQz9/UBC-Degree-PLanner?node-id=152-988&t=UbGVylrJVHtihFET-0)
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | TypeScript, React, Tailwind CSS |
-| Backend | TypeScript, Express |
-
-## Repository Structure
-
-```
-UBC-Degree-Planner/
-├── backend/                # Express API server
-│   ├── src/
-│   │   ├── routes/         # API route handlers
-│   │   ├── services/       # Business logic (validation, planning)
-│   │   ├── models/         # Data models & types
-│   │   └── index.ts        # Server entry point
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/               # React SPA
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Page-level components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── types/          # Shared TypeScript types
-│   │   ├── services/       # API client functions
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── tsconfig.json
-├── reference/              # Figma prototype screenshots
-├── README.md
-└── LICENSE
-```
-
-## Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- npm or yarn
-
-### Installation
+**Check if you already have them.** Open a terminal (Windows: PowerShell;
+macOS: Terminal) and run:
 
 ```bash
-git clone https://github.com/DavidHua04/UBC-Courses-Visualization.git
+node -v
+npm -v
+```
+
+If both print a version number, skip ahead to [Run it](#run-it). If you get
+"command not found" / "not recognized", install Node with the steps for
+your OS below.
+
+<details>
+<summary><b>Windows</b></summary>
+
+1. Go to [nodejs.org](https://nodejs.org) and download the **LTS**
+   installer (the button labeled "LTS", not "Current").
+2. Run the installer, keeping all default options.
+3. **Close and reopen** any terminal windows — PATH changes from the
+   installer only apply to new terminals.
+4. Verify with `node -v` and `npm -v` again.
+
+If you have `winget` (built into modern Windows 10/11), you can instead run:
+
+```powershell
+winget install OpenJS.NodeJS.LTS
+```
+
+then close/reopen your terminal and verify.
+
+If `node` is still not found after installing and reopening your terminal,
+search Start menu for "Edit environment variables for your account" and
+check that a Node.js path (e.g. `C:\Program Files\nodejs\`) is listed under
+your user `Path` variable.
+
+</details>
+
+<details>
+<summary><b>macOS</b></summary>
+
+1. Go to [nodejs.org](https://nodejs.org) and download the **LTS**
+   installer for macOS.
+2. Run the `.pkg` installer with default options.
+3. Open a new Terminal window and verify with `node -v` and `npm -v`.
+
+If you use [Homebrew](https://brew.sh), you can instead run `brew install
+node`.
+
+</details>
+
+<details>
+<summary><b>Linux</b></summary>
+
+Use your distribution's package manager, or the installers at
+[nodejs.org](https://nodejs.org). For example, on Ubuntu/Debian:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+</details>
+
+Once `node -v` and `npm -v` both work, get the project onto your machine
+(skip this if you already have the folder):
+
+```bash
+git clone <this-repo-url>
 cd UBC-Courses-Visualization
 ```
 
-**Backend:**
+## Run it
+
 ```bash
-cd backend
-npm install
-npm run dev
+npm install      # downloads dependencies into node_modules/ (first time only)
+npm run data     # data/source → public/data (also runs as part of build)
+npm run dev      # http://localhost:5173
 ```
 
-**Frontend:**
+Open the printed `http://localhost:5173` URL in your browser. Press
+`Ctrl+C` in the terminal to stop the server when you're done.
+
+Other commands:
+
 ```bash
-cd frontend
-npm install
-npm run dev
+npm run test     # engine + parser unit tests (vitest)
+npm run build    # data + typecheck + production bundle
+npm run preview  # serve the production build
+npm run e2e      # browser smoke test against the preview server
 ```
 
-The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`.
+Deploy by putting `dist/` on any static host.
 
-## Contributing
+## How it's built
 
-Contributions are welcome! To contribute:
+```
+data/source/      scraped UBC catalog + program specs (checked in)
+scripts/          build-data.ts → public/data/ (index, dept chunks,
+                  unlocks graph, programs); prose→rule-tree parser
+src/engine/       pure domain logic: prereq evaluation, plan validation,
+                  requirement matching, degree progress — all unit tested
+src/catalog/      static-data client: upfront search index, lazy dept chunks
+src/state/        Zustand store, localStorage persistence, share links
+src/ui/           React components (three-zone workspace)
+```
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -m "Add your message here"`
-4. Push the branch: `git push origin feature/your-feature-name`
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The design rationale — why there's no backend, what was kept from the
+original full-stack version, and the UX decisions — is in [PLAN.md](PLAN.md).

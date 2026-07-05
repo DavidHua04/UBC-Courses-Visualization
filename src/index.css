@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/*
+ * Degree Map design tokens — "registrar's worksheet, modernized".
+ * Cool paper surfaces, deep UBC navy chrome, gold reserved for the active
+ * target and progress fills, semantic met/unmet/judgment colors that are
+ * always accompanied by a mark or label (never color alone).
+ */
+@theme {
+  --color-paper: #fafbfc;
+  --color-panel: #f1f3f6;
+  --color-well: #e8ebf0;
+  --color-ink: #1c2733;
+  --color-ink-soft: #5b6b7b;
+  --color-ink-faint: #8b98a5;
+  --color-line: #d9dfe6;
+  --color-line-soft: #e7ebf0;
+
+  --color-navy: #0c2344;
+  --color-navy-hover: #1a3a66;
+  --color-navy-wash: #e9eef6;
+
+  --color-gold: #a97e00;
+  --color-gold-bright: #f2a900;
+  --color-gold-wash: #fdf3d7;
+
+  --color-met: #1a7f4b;
+  --color-met-wash: #e3f2e9;
+  --color-unmet: #c23a33;
+  --color-unmet-wash: #fae8e7;
+  --color-judge: #a36400;
+  --color-judge-wash: #f7eedd;
+  --color-progress: #2f5d9e;
+  --color-progress-wash: #e7eef8;
+
+  --font-display: Georgia, "Times New Roman", Cambria, serif;
+  --font-sans: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "Cascadia Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+  font-size: 14px;
+}
+
+/* Hairline scrollbars to keep the dense panels quiet */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A course card that just landed on the board */
+@keyframes landed {
+  0% {
+    box-shadow: 0 0 0 3px var(--color-gold-bright);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+.just-landed {
+  animation: landed 0.9s ease-out;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-progress);
+  outline-offset: 1px;
+}
