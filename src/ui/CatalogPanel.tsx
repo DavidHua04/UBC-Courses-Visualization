@@ -1,6 +1,6 @@
 import { useDraggable } from "@dnd-kit/core";
 import type { Course, CourseLite, Plan } from "../engine/types";
-import { TERM_LABELS, displayId, liteCredits, liteId, liteTitle } from "../engine/types";
+import { displayId, liteCredits, liteId, liteIsGeneric, liteTitle, slotLabel } from "../engine/types";
 import { checkEligibility, type CourseMap } from "../engine/validate";
 import { useStore } from "../state/store";
 import { EligibilityDot } from "./bits";
@@ -45,6 +45,14 @@ function ResultRow({
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-xs font-semibold">{displayId(id)}</span>
           <span className="text-[11px] text-ink-faint">{liteCredits(lite)} cr</span>
+          {liteIsGeneric(lite) && (
+            <span
+              className="rounded-sm bg-gold-wash px-1 py-px text-[9px] font-bold tracking-wide text-gold uppercase"
+              title="Generic placeholder — no specific UBC course equivalent"
+            >
+              Generic
+            </span>
+          )}
         </div>
         <div className="truncate text-xs text-ink-soft">{liteTitle(lite)}</div>
       </div>
@@ -57,7 +65,7 @@ function ResultRow({
             addEntry(id, target.year, target.term);
             selectCourse(id);
           }}
-          title={`Add to Year ${target.year}, ${TERM_LABELS[target.term]}`}
+          title={`Add to ${slotLabel(target.year, target.term)}`}
           className="invisible shrink-0 rounded-md border border-line bg-paper px-2 py-0.5 text-xs font-semibold text-navy group-hover:visible hover:border-navy"
         >
           + Add
@@ -94,9 +102,7 @@ export function CatalogPanel({
         />
         <p className="mt-2 text-[11px] text-ink-faint">
           Adding to{" "}
-          <span className="font-semibold text-gold">
-            Year {target.year} · {TERM_LABELS[target.term]}
-          </span>{" "}
+          <span className="font-semibold text-gold">{slotLabel(target.year, target.term)}</span>{" "}
           — click a term header to change
         </p>
       </div>

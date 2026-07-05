@@ -31,8 +31,9 @@ export function entry(
   year: number,
   term: Term,
   status: EntryStatus = "planned",
+  creditsOverride?: number,
 ): PlanEntry {
-  return { id: `e${++nextEntry}`, courseId, year, term, status };
+  return { id: `e${++nextEntry}`, courseId, year, term, status, creditsOverride };
 }
 
 export function plan(entries: PlanEntry[], overrides: Partial<Plan> = {}): Plan {

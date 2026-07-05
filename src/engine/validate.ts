@@ -28,13 +28,19 @@ function sortedEntries(plan: Plan): PlanEntry[] {
  * Courses taken strictly before (year, term), as courseId → credits.
  * Anything scheduled and not failed is assumed passed — planning is
  * about the future, so "planned" counts the same as "completed".
+ *
+ * Generic transfer/prior-credit placeholders (Course.generic) are excluded:
+ * they stand for an unspecified course at a dept+year level, so they can't
+ * satisfy a prerequisite that names a specific course or credit pool.
  */
 export function takenBefore(plan: Plan, year: number, term: Term, courses: CourseMap): TakenMap {
   const taken = new Map<string, number>();
   for (const e of plan.entries) {
     if (e.status === "failed") continue;
+    const course = courses.get(e.courseId);
+    if (course?.generic) continue;
     if (compareSlots(e.year, e.term, year, term) < 0) {
-      taken.set(e.courseId, courses.get(e.courseId)?.credits ?? 3);
+      taken.set(e.courseId, e.creditsOverride ?? course?.credits ?? 3);
     }
   }
   return taken;
@@ -73,9 +79,10 @@ export function validatePlan(plan: Plan, courses: CourseMap): ValidationReport {
       continue;
     }
 
+    const credits = entry.creditsOverride ?? course.credits;
     const key = termKey(entry.year, entry.term);
-    termCredits[key] = (termCredits[key] ?? 0) + course.credits;
-    if (entry.status !== "failed") totalCredits += course.credits;
+    termCredits[key] = (termCredits[key] ?? 0) + credits;
+    if (entry.status !== "failed") totalCredits += credits;
 
     const first = seen.get(entry.courseId);
     if (first && first.status !== "failed") {
@@ -142,6 +149,7 @@ export function validatePlan(plan: Plan, courses: CourseMap): ValidationReport {
 
   for (const [key, credits] of Object.entries(termCredits)) {
     const [yearStr, term] = key.split(":") as [string, Term];
+    if (term === "TR") continue; // transfer credit has no per-term load limit
     const limit = term === "S" ? CREDIT_LIMIT_SUMMER : CREDIT_LIMIT_WINTER;
     if (credits > limit) {
       termIssues.push({

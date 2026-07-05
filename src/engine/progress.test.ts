@@ -9,8 +9,9 @@ const cpsc320 = course("CPSC320", { credits: 3 });
 const cpsc410 = course("CPSC410", { credits: 3 });
 const math100 = course("MATH100", { credits: 3 });
 const engl110 = course("ENGL110", { credits: 3 });
+const cpscGeneric300 = course("CPSC300T", { credits: 3, generic: true });
 
-const catalog = courseMap(cpsc110, cpsc310, cpsc320, cpsc410, math100, engl110);
+const catalog = courseMap(cpsc110, cpsc310, cpsc320, cpsc410, math100, engl110, cpscGeneric300);
 
 describe("matchCourses", () => {
   const all = [cpsc110, cpsc310, cpsc410, math100];
@@ -129,5 +130,18 @@ describe("computeProgress", () => {
     };
     const p = plan([entry("MATH100", 1, "W1")], { exemptions: ["breadth:english"] });
     expect(computeProgress(p, breadthProgram, catalog).requirements[0].satisfied).toBe(true);
+  });
+
+  it("a generic transfer placeholder counts toward credit/elective pools", () => {
+    const p = plan([entry("CPSC300T", 0, "TR")]);
+    const prog = computeProgress(p, program, catalog);
+    expect(prog.requirements[1]).toMatchObject({ satisfied: false, completed: 3, required: 9 });
+  });
+
+  it("creditsOverride wins over the catalog credit value", () => {
+    const p = plan([entry("CPSC300T", 0, "TR", "planned", 6)]);
+    const prog = computeProgress(p, program, catalog);
+    expect(prog.creditsCounted).toBe(6);
+    expect(prog.requirements[1].completed).toBe(6);
   });
 });

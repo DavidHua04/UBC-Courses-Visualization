@@ -12,6 +12,7 @@ import type {
   Program,
   Term,
 } from "../engine/types";
+import { TRANSFER_YEAR } from "../engine/types";
 
 export type InsightTab = "course" | "plan" | "degree";
 
@@ -75,6 +76,8 @@ interface PlannerState {
   moveEntry(entryId: string, year: number, term: Term): void;
   removeEntry(entryId: string): void;
   cycleStatus(entryId: string): void;
+  setTermStatus(year: number, term: Term, status: EntryStatus): void;
+  setEntryCredits(entryId: string, credits: number | null): void;
   setYears(years: number): void;
   toggleExemption(key: string): void;
 }
@@ -177,7 +180,10 @@ export const useStore = create<PlannerState>()(
         addEntry: (courseId, year, term) =>
           set((s) =>
             mutatePlan(s, (p) => {
-              const entry: PlanEntry = { id: uid(), courseId, year, term, status: "planned" };
+              // Transfer/prior credit is already-earned by definition — default
+              // it straight to Completed instead of Planned.
+              const status = year === TRANSFER_YEAR ? "completed" : "planned";
+              const entry: PlanEntry = { id: uid(), courseId, year, term, status };
               p.entries.push(entry);
               if (year > p.years) p.years = year;
             }),
@@ -185,7 +191,15 @@ export const useStore = create<PlannerState>()(
         moveEntry: (entryId, year, term) =>
           set((s) =>
             mutatePlan(s, (p) => {
-              p.entries = p.entries.map((e) => (e.id === entryId ? { ...e, year, term } : e));
+              p.entries = p.entries.map((e) => {
+                if (e.id !== entryId) return e;
+                // Dragging a still-planned course into the transfer row means
+                // it's prior credit — treat it as already-earned, same as a
+                // fresh add there. Don't touch in_progress/completed/failed.
+                const status =
+                  year === TRANSFER_YEAR && e.status === "planned" ? "completed" : e.status;
+                return { ...e, year, term, status };
+              });
             }),
           ),
         removeEntry: (entryId) =>
@@ -203,6 +217,26 @@ export const useStore = create<PlannerState>()(
                   STATUS_CYCLE[(STATUS_CYCLE.indexOf(e.status) + 1) % STATUS_CYCLE.length];
                 return { ...e, status: next };
               });
+            }),
+          ),
+        // Bulk shortcut for a whole term. Failed entries are history — a
+        // term-level sweep never resurrects them.
+        setTermStatus: (year, term, status) =>
+          set((s) =>
+            mutatePlan(s, (p) => {
+              p.entries = p.entries.map((e) =>
+                e.year === year && e.term === term && e.status !== "failed"
+                  ? { ...e, status }
+                  : e,
+              );
+            }),
+          ),
+        setEntryCredits: (entryId, credits) =>
+          set((s) =>
+            mutatePlan(s, (p) => {
+              p.entries = p.entries.map((e) =>
+                e.id === entryId ? { ...e, creditsOverride: credits ?? undefined } : e,
+              );
             }),
           ),
         setYears: (years) =>

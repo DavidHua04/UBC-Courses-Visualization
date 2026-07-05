@@ -29,19 +29,27 @@ export interface Course {
   coreqText: string | null;
   /** Courses whose prerequisites reference this course (reverse edges). */
   unlocks: string[];
+  /**
+   * True for synthetic dept+year-level placeholders (e.g. "CPSC100T",
+   * standing in for transfer/exam credit with no specific UBC equivalent).
+   * These count toward degree-progress credit and breadth pools but never
+   * satisfy another course's prerequisites — see `takenBefore` in validate.ts.
+   */
+  generic?: boolean;
 }
 
 /**
  * Compact search-index record, loaded upfront for all courses.
- * Tuple keeps the index small: [id, title, credits, hasPrereq, unlockCount].
+ * Tuple keeps the index small: [id, title, credits, hasPrereq, unlockCount, isGeneric].
  */
-export type CourseLite = [string, string, number, 0 | 1, number];
+export type CourseLite = [string, string, number, 0 | 1, number, 0 | 1];
 
 export const liteId = (c: CourseLite) => c[0];
 export const liteTitle = (c: CourseLite) => c[1];
 export const liteCredits = (c: CourseLite) => c[2];
 export const liteHasPrereq = (c: CourseLite) => c[3] === 1;
 export const liteUnlockCount = (c: CourseLite) => c[4];
+export const liteIsGeneric = (c: CourseLite) => c[5] === 1;
 
 /** "CPSC210" → "CPSC" (letters prefix). */
 export function deptOf(courseId: string): string {
@@ -63,22 +71,30 @@ export function displayId(courseId: string): string {
 
 // ── Plans ───────────────────────────────────────────────────────────
 
-export type Term = "W1" | "W2" | "S";
+/** "TR" is the single pseudo-term for the year-0 transfer/prior-credit row. */
+export type Term = "W1" | "W2" | "S" | "TR";
 export const TERMS: Term[] = ["W1", "W2", "S"];
 export const TERM_LABELS: Record<Term, string> = {
   W1: "Winter 1",
   W2: "Winter 2",
   S: "Summer",
+  TR: "Transfer / Prior Credit",
 };
 
 export type EntryStatus = "planned" | "in_progress" | "completed" | "failed";
 
+/** Plan year reserved for credit earned before Year 1 (transfer, AP/IB, etc.). */
+export const TRANSFER_YEAR = 0;
+
 export interface PlanEntry {
   id: string;
   courseId: string;
-  year: number; // 1-based plan year
+  year: number; // 1-based plan year, or TRANSFER_YEAR (0) for prior credit
   term: Term;
   status: EntryStatus;
+  /** Manual credit override — needed for transfer credit, which rarely
+   *  matches the catalog's own credit value for a course. */
+  creditsOverride?: number;
 }
 
 export interface Plan {
@@ -96,11 +112,21 @@ export interface Plan {
 export type TermKey = `${number}:${Term}`;
 export const termKey = (year: number, term: Term): TermKey => `${year}:${term}`;
 
-const TERM_ORDER: Record<Term, number> = { W1: 0, W2: 1, S: 2 };
+const TERM_ORDER: Record<Term, number> = { TR: -1, W1: 0, W2: 1, S: 2 };
 
 /** Chronological comparison of (year, term) slots. */
 export function compareSlots(aYear: number, aTerm: Term, bYear: number, bTerm: Term): number {
   return aYear !== bYear ? aYear - bYear : TERM_ORDER[aTerm] - TERM_ORDER[bTerm];
+}
+
+/** "Year 2" or, for the transfer row, "Transfer / Prior Credit". */
+export function yearLabel(year: number): string {
+  return year === TRANSFER_YEAR ? TERM_LABELS.TR : `Year ${year}`;
+}
+
+/** Full slot label for messages that also name the term. */
+export function slotLabel(year: number, term: Term): string {
+  return year === TRANSFER_YEAR ? TERM_LABELS.TR : `Year ${year} · ${TERM_LABELS[term]}`;
 }
 
 // ── Programs / degree requirements ──────────────────────────────────

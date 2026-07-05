@@ -6,7 +6,7 @@ import type {
   RequirementProgress,
   ValidationReport,
 } from "../engine/types";
-import { TERM_LABELS, displayId, liteId, liteTitle } from "../engine/types";
+import { displayId, liteId, liteTitle, slotLabel } from "../engine/types";
 import { evaluateRule } from "../engine/prereq";
 import { computeProgress } from "../engine/progress";
 import { checkEligibility, takenBefore, type CourseMap } from "../engine/validate";
@@ -91,7 +91,7 @@ function CourseTab({
           <EligibilityDot elig={elig} />
           <span className="text-ink-soft">
             {entry
-              ? `In plan — Year ${entry.year}, ${TERM_LABELS[entry.term]}`
+              ? `In plan — ${slotLabel(entry.year, entry.term)}`
               : describeEligibility(elig)}
           </span>
         </div>
@@ -100,13 +100,15 @@ function CourseTab({
             onClick={() => addEntry(course.id, target.year, target.term)}
             className="mt-2 rounded-md bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-hover"
           >
-            Add to Year {target.year} · {TERM_LABELS[target.term]}
+            Add to {slotLabel(target.year, target.term)}
           </button>
         )}
       </div>
 
       <div>
-        <SectionLabel>Prerequisites{entry ? ` — checked at Year ${slot.year} ${slot.term}` : ""}</SectionLabel>
+        <SectionLabel>
+          Prerequisites{entry ? ` — checked at ${slotLabel(slot.year, slot.term)}` : ""}
+        </SectionLabel>
         {ruleEval ? (
           <RuleTree ev={ruleEval} plan={plan} />
         ) : course.prereqText ? (
@@ -246,8 +248,7 @@ function PlanTab({ plan, report }: { plan: Plan; report: ValidationReport }) {
                     key={`${t.year}-${t.term}`}
                     className="rounded-md border border-judge/40 bg-judge-wash px-2.5 py-2 text-xs"
                   >
-                    Year {t.year} {TERM_LABELS[t.term]}: {t.credits} credits — above the usual{" "}
-                    {t.limit}.
+                    {slotLabel(t.year, t.term)}: {t.credits} credits — above the usual {t.limit}.
                   </li>
                 ))}
               </ul>

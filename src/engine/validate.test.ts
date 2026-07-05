@@ -11,8 +11,9 @@ const cpsc310 = course("CPSC310", { credits: 4, prereq: req("CPSC210") });
 const standing = course("APBI314", { prereqText: "At least third-year standing." });
 const withCoreq = course("PHYS159", { coreq: ["PHYS157"] });
 const phys157 = course("PHYS157");
+const cpscGeneric1 = course("CPSC100T", { credits: 3, generic: true });
 
-const catalog = courseMap(cpsc110, cpsc210, cpsc310, standing, withCoreq, phys157);
+const catalog = courseMap(cpsc110, cpsc210, cpsc310, standing, withCoreq, phys157, cpscGeneric1);
 
 describe("validatePlan", () => {
   it("accepts a correctly ordered plan", () => {
@@ -103,6 +104,30 @@ describe("validatePlan", () => {
     const report = validatePlan(p, catalog);
     expect(report.ok).toBe(false);
     expect(report.entryIssues[0].kind).toBe("unknown_course");
+  });
+
+  it("the transfer-credit row (year 0) counts as taken before Year 1", () => {
+    const p = plan([entry("CPSC110", 0, "TR"), entry("CPSC210", 1, "W1")]);
+    expect(validatePlan(p, catalog).ok).toBe(true);
+  });
+
+  it("a generic transfer placeholder never satisfies a specific prerequisite", () => {
+    const p = plan([entry("CPSC100T", 0, "TR"), entry("CPSC210", 1, "W1")]);
+    const report = validatePlan(p, catalog);
+    expect(report.ok).toBe(false);
+    expect(report.entryIssues[0].kind).toBe("prereq_unmet");
+  });
+
+  it("creditsOverride replaces the catalog credit value in totals", () => {
+    const p = plan([entry("CPSC100T", 0, "TR", "planned", 6)]);
+    const report = validatePlan(p, catalog);
+    expect(report.totalCredits).toBe(6);
+    expect(report.termCredits["0:TR"]).toBe(6);
+  });
+
+  it("does not apply a term-overload limit to the transfer row", () => {
+    const p = plan([entry("CPSC100T", 0, "TR", "planned", 30)]);
+    expect(validatePlan(p, catalog).termIssues).toEqual([]);
   });
 });
 

@@ -109,10 +109,22 @@ export function evaluateMatcher(
  * `${requirementId}:${categoryKey}` marks one breadth category.
  */
 export function computeProgress(plan: Plan, program: Program, courses: CourseMap): DegreeProgress {
+  // Generic transfer placeholders (Course.generic) still count toward
+  // degree progress — unlike prereq-checking (see validate.ts:takenBefore),
+  // they're allowed to fill breadth/elective/credit-total pools. A manual
+  // creditsOverride (typical for transfer credit) wins over the catalog value.
+  const creditsById = new Map<string, number>();
+  for (const e of plan.entries) {
+    if (!COUNTED.has(e.status)) continue;
+    if (e.creditsOverride != null) creditsById.set(e.courseId, e.creditsOverride);
+  }
   const takenIds = new Set(
     plan.entries.filter((e) => COUNTED.has(e.status)).map((e) => e.courseId),
   );
-  const taken = [...takenIds].map((id) => courses.get(id)).filter((c): c is Course => !!c);
+  const taken = [...takenIds]
+    .map((id) => courses.get(id))
+    .filter((c): c is Course => !!c)
+    .map((c) => (creditsById.has(c.id) ? { ...c, credits: creditsById.get(c.id)! } : c));
 
   const exemptions = new Set(plan.exemptions);
   let creditsCounted = taken.reduce((s, c) => s + c.credits, 0);

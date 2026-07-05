@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import type { EntryIssue, Plan, PlanEntry, Term, ValidationReport } from "../engine/types";
-import { TERMS, TERM_LABELS, displayId, termKey } from "../engine/types";
+import type { EntryIssue, EntryStatus, Plan, PlanEntry, Term, ValidationReport } from "../engine/types";
+import { TERMS, TERM_LABELS, TRANSFER_YEAR, displayId, termKey } from "../engine/types";
 import { CREDIT_LIMIT_SUMMER, CREDIT_LIMIT_WINTER, type CourseMap } from "../engine/validate";
 import { useStore } from "../state/store";
 import { STATUS_META, StatusGlyph } from "./bits";
@@ -18,7 +18,9 @@ function EntryCard({
   const selectCourse = useStore((s) => s.selectCourse);
   const cycleStatus = useStore((s) => s.cycleStatus);
   const removeEntry = useStore((s) => s.removeEntry);
+  const setEntryCredits = useStore((s) => s.setEntryCredits);
   const selected = useStore((s) => s.selectedCourseId) === entry.courseId;
+  const isTransfer = entry.year === TRANSFER_YEAR;
 
   const course = courseMap.get(entry.courseId);
   const worst = issues.some((i) => i.severity === "error")
@@ -71,7 +73,23 @@ function EntryCard({
             {worst === "error" ? "✗" : "?"}
           </span>
         )}
-        <span className="ml-auto text-[10px] text-ink-faint">{course?.credits ?? "–"} cr</span>
+        {isTransfer ? (
+          <input
+            type="number"
+            min={0}
+            step={0.5}
+            value={entry.creditsOverride ?? course?.credits ?? 3}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const n = e.target.value === "" ? null : Number(e.target.value);
+              setEntryCredits(entry.id, n != null && !Number.isNaN(n) ? n : null);
+            }}
+            title="Credits granted for this transfer/prior credit — edit to match your transcript"
+            className="ml-auto w-11 shrink-0 rounded border border-line-soft bg-paper px-1 py-0.5 text-right text-[10px] text-ink-soft"
+          />
+        ) : (
+          <span className="ml-auto text-[10px] text-ink-faint">{course?.credits ?? "–"} cr</span>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -90,6 +108,10 @@ function EntryCard({
   );
 }
 
+// Stages the term-header click steps through. Failed is deliberately not
+// in the loop — it's per-course history, never set in bulk.
+const TERM_STATUS_CYCLE: EntryStatus[] = ["planned", "in_progress", "completed"];
+
 function TermCell({
   plan,
   year,
@@ -107,14 +129,34 @@ function TermCell({
 }) {
   const target = useStore((s) => s.target);
   const setTarget = useStore((s) => s.setTarget);
+  const setTermStatus = useStore((s) => s.setTermStatus);
   const isTarget = target.year === year && target.term === term;
 
   const { setNodeRef, isOver } = useDroppable({ id: `cell:${year}:${term}` });
 
   const entries = plan.entries.filter((e) => e.year === year && e.term === term);
   const credits = report.termCredits[termKey(year, term)] ?? 0;
+  const hasLimit = term !== "TR";
   const limit = term === "S" ? CREDIT_LIMIT_SUMMER : CREDIT_LIMIT_WINTER;
-  const over = credits > limit;
+  const over = hasLimit && credits > limit;
+
+  // Whole-term status shortcut: clicking the header advances every
+  // non-failed course to the stage after the term's least-advanced one.
+  // Transfer credit is completed by definition, so no cycling there.
+  const live = entries.filter((e) => e.status !== "failed");
+  const canCycle = term !== "TR" && live.length > 0;
+  const stage = live.length
+    ? Math.min(...live.map((e) => Math.max(0, TERM_STATUS_CYCLE.indexOf(e.status))))
+    : 0;
+  const nextStatus = TERM_STATUS_CYCLE[(stage + 1) % TERM_STATUS_CYCLE.length];
+  const uniform =
+    live.length > 0 && live.every((e) => e.status === live[0].status) ? live[0].status : null;
+
+  const label = (
+    <span className="truncate text-[11px] font-semibold tracking-wide text-ink-soft">
+      {TERM_LABELS[term]}
+    </span>
+  );
 
   return (
     <div
@@ -123,24 +165,58 @@ function TermCell({
         isOver ? "border-gold-bright bg-gold-wash" : isTarget ? "border-gold bg-paper" : "border-line-soft bg-paper"
       }`}
     >
-      <button
-        onClick={() => setTarget(year, term)}
-        title="Make this the term new courses are added to"
-        className={`flex items-center justify-between rounded-t-lg border-b px-2.5 py-1.5 text-left ${
-          isTarget ? "border-gold bg-gold-wash" : "border-line-soft bg-panel/60 hover:bg-gold-wash/60"
+      <div
+        className={`flex items-center gap-1.5 rounded-t-lg border-b py-1 pl-2.5 pr-1 ${
+          isTarget ? "border-gold bg-gold-wash" : "border-line-soft bg-panel/60"
         }`}
       >
-        <span className="text-[11px] font-semibold tracking-wide text-ink-soft">
-          {TERM_LABELS[term]}
-          {isTarget && <span className="ml-1.5 text-gold">← adding here</span>}
-        </span>
+        {canCycle ? (
+          <button
+            onClick={() => setTermStatus(year, term, nextStatus)}
+            title={`${
+              uniform ? `All ${STATUS_META[uniform].label.toLowerCase()}` : "Mixed statuses"
+            } — click to set every course here to ${STATUS_META[nextStatus].label}`}
+            className="flex min-w-0 flex-1 items-center gap-1.5 py-0.5 text-left hover:opacity-70"
+          >
+            {label}
+            {uniform && (
+              <span className={`shrink-0 ${STATUS_META[uniform].className}`}>
+                <StatusGlyph status={uniform} />
+              </span>
+            )}
+          </button>
+        ) : (
+          <span className="flex min-w-0 flex-1 items-center py-0.5">{label}</span>
+        )}
         <span
-          className={`font-mono text-[11px] ${over ? "font-bold text-unmet" : "text-ink-faint"}`}
-          title={over ? `Over the usual ${limit}-credit load` : `${credits} of ~${limit} credits`}
+          className={`shrink-0 whitespace-nowrap font-mono text-[11px] tabular-nums ${
+            over ? "font-bold text-unmet" : "text-ink-faint"
+          }`}
+          title={
+            !hasLimit
+              ? `${credits} credits — no term load limit applies here`
+              : over
+                ? `Over the usual ${limit}-credit load`
+                : `${credits} of ~${limit} credits`
+          }
         >
           {credits} cr{over ? " !" : ""}
         </span>
-      </button>
+        <button
+          onClick={() => setTarget(year, term)}
+          aria-pressed={isTarget}
+          title={
+            isTarget
+              ? "Courses added from search go to this term"
+              : "Send courses added from search to this term"
+          }
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[13px] font-bold leading-none ${
+            isTarget ? "text-gold" : "text-ink-faint/60 hover:text-navy"
+          }`}
+        >
+          +
+        </button>
+      </div>
       <div className="flex flex-1 flex-col gap-1.5 p-1.5">
         {entries.map((e) => (
           <EntryCard
@@ -181,6 +257,27 @@ export function Board({
   return (
     <main className="min-w-0 flex-1 overflow-auto bg-well/40 p-4">
       <div className="min-w-[560px] space-y-4">
+        <section>
+          <h2 className="mb-1.5 font-display text-sm font-semibold text-ink-soft">
+            Transfer / Prior Credit
+          </h2>
+          <p className="mb-1.5 text-[11px] text-ink-faint">
+            Credit from another institution, AP/IB, or challenge exams — not tied to a UBC term.
+            Search for a specific equivalent course, or a department's generic{" "}
+            <span className="font-mono">1st–4th Year Credit</span> placeholder if none applies.
+          </p>
+          <div className="grid grid-cols-1 gap-3">
+            <TermCell
+              plan={plan}
+              year={TRANSFER_YEAR}
+              term="TR"
+              report={report}
+              courseMap={courseMap}
+              issuesByEntry={issuesByEntry}
+            />
+          </div>
+        </section>
+
         {years.map((year) => (
           <section key={year}>
             <h2 className="mb-1.5 font-display text-sm font-semibold text-ink-soft">

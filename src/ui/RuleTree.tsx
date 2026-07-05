@@ -3,7 +3,7 @@
 // a registrar's mark: ✓ met, ✗ not yet, and where a missing course sits.
 
 import type { Plan, RuleEval } from "../engine/types";
-import { TERM_LABELS, displayId } from "../engine/types";
+import { displayId, slotLabel } from "../engine/types";
 import { useStore } from "../state/store";
 
 function Mark({ met }: { met: boolean }) {
@@ -35,8 +35,8 @@ function CourseLeaf({ courseId, met, plan }: { courseId: string; met: boolean; p
   const entry = plan.entries.find((e) => e.courseId === courseId && e.status !== "failed");
 
   let note: string | null = null;
-  if (met) note = entry ? `Year ${entry.year} · ${TERM_LABELS[entry.term]}` : null;
-  else if (entry) note = `planned later — Year ${entry.year} · ${TERM_LABELS[entry.term]}`;
+  if (met) note = entry ? slotLabel(entry.year, entry.term) : null;
+  else if (entry) note = `planned later — ${slotLabel(entry.year, entry.term)}`;
   else note = "not in plan";
 
   return (

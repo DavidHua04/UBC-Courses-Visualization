@@ -3,7 +3,7 @@
 // glyph shape, and interactive ones carry a title.
 
 import type { Eligibility, EntryStatus } from "../engine/types";
-import { TERM_LABELS } from "../engine/types";
+import { slotLabel } from "../engine/types";
 
 export function StatusGlyph({ status }: { status: EntryStatus }) {
   switch (status) {
@@ -65,7 +65,7 @@ export function describeEligibility(elig: Eligibility): string {
     case "unknown":
       return `Needs your judgment: ${elig.prereqText}`;
     case "already_planned":
-      return `Already in plan — Year ${elig.year}, ${TERM_LABELS[elig.term]}`;
+      return `Already in plan — ${slotLabel(elig.year, elig.term)}`;
   }
 }
 

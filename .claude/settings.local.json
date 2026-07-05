@@ -25,7 +25,8 @@
       "mcp__playwright-test__planner_save_plan",
       "mcp__playwright-test__generator_setup_page",
       "mcp__playwright-test__generator_write_test",
-      "mcp__playwright-test__generator_read_log"
+      "mcp__playwright-test__generator_read_log",
+      "Bash(node *)"
     ]
   },
   "enabledMcpjsonServers": [

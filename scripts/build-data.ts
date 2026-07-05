@@ -135,6 +135,38 @@ for (const rc of raw) {
   });
 }
 
+// Generic dept+year-level placeholders, one per department per class year,
+// for transfer/AP/IB credit that isn't equivalent to any specific UBC
+// course. Id ends in "00T" ("transfer") so levelOf() still parses the year
+// out of it, but it can never collide with a real scraped course code.
+const GENERIC_YEAR_NAMES = ["1st", "2nd", "3rd", "4th"];
+const depts = new Set([...courses.values()].map((c) => c.dept));
+let genericAdded = 0;
+for (const dept of depts) {
+  for (let year = 1; year <= 4; year++) {
+    const id = `${dept}${year}00T`;
+    if (courses.has(id)) continue; // never expected, but don't clobber a real id
+    courses.set(id, {
+      id,
+      dept,
+      number: `${year}00T`,
+      title: `${dept} ${GENERIC_YEAR_NAMES[year - 1]}-Year Credit (transfer / prior credit)`,
+      credits: 3,
+      description:
+        `Generic placeholder for transfer, AP/IB, or other prior credit at the ${GENERIC_YEAR_NAMES[year - 1]}-year ${dept} level, ` +
+        "with no specific UBC course equivalent. Counts toward credit totals and dept/level-based " +
+        "degree requirements (electives, breadth), but does not satisfy any course's specific prerequisites.",
+      prereq: null,
+      prereqText: null,
+      coreq: [],
+      coreqText: null,
+      unlocks: [],
+      generic: true,
+    });
+    genericAdded++;
+  }
+}
+
 // Reverse prereq edges ("unlocks"), restricted to courses that exist.
 let edges = 0;
 for (const course of courses.values()) {
@@ -184,6 +216,7 @@ const index: CourseLite[] = sorted.map((c) => [
   c.credits,
   c.prereq || c.prereqText ? 1 : 0,
   c.unlocks.length,
+  c.generic ? 1 : 0,
 ]);
 writeFileSync(join(outDir, "index.json"), JSON.stringify({ courses: index }));
 
@@ -199,6 +232,7 @@ for (const [dept, list] of byDept) {
 writeFileSync(join(outDir, "programs.json"), JSON.stringify(programs));
 
 console.log(`Courses: ${courses.size} across ${byDept.size} departments`);
+console.log(`Generic transfer-credit placeholders: ${genericAdded}`);
 console.log(
   `Prereqs: ${stats.existing} pre-parsed, +${stats.reparsed} newly parsed, ` +
     `${stats.unparsed} prose-only, ${stats.none} without prerequisites`,
