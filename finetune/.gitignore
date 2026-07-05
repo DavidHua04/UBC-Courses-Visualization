@@ -1,0 +1,9 @@
+# Heavy pipeline artifacts — regenerable, never committed.
+01-corpus/raw/
+01-corpus/state/
+02-knowledge/work/
+03-dataset/generated/
+04-training/runs/
+04-training/checkpoints/
+05-eval/results/
+06-serving/models/
