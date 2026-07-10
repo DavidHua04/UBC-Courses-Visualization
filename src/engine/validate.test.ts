@@ -9,11 +9,31 @@ const cpsc210 = course("CPSC210", {
 });
 const cpsc310 = course("CPSC310", { credits: 4, prereq: req("CPSC210") });
 const standing = course("APBI314", { prereqText: "At least third-year standing." });
-const withCoreq = course("PHYS159", { coreq: ["PHYS157"] });
+const withCoreq = course("PHYS159", { coreq: req("PHYS157") });
 const phys157 = course("PHYS157");
 const cpscGeneric1 = course("CPSC100T", { credits: 3, generic: true });
+const biol300 = course("BIOL300", { coreq: one_of(req("MATH101"), req("MATH103")) });
+const math103 = course("MATH103");
+const proseCoreq = course("BMEG455", { coreqText: "Fourth-year standing in BMEG." });
+const afst256 = course("AFST256", { equiv: ["HIST256"] });
+const hist256 = course("HIST256", { equiv: ["AFST256"] });
+const hist356 = course("HIST356", { prereq: req("HIST256") });
 
-const catalog = courseMap(cpsc110, cpsc210, cpsc310, standing, withCoreq, phys157, cpscGeneric1);
+const catalog = courseMap(
+  cpsc110,
+  cpsc210,
+  cpsc310,
+  standing,
+  withCoreq,
+  phys157,
+  cpscGeneric1,
+  biol300,
+  math103,
+  proseCoreq,
+  afst256,
+  hist256,
+  hist356,
+);
 
 describe("validatePlan", () => {
   it("accepts a correctly ordered plan", () => {
@@ -68,6 +88,47 @@ describe("validatePlan", () => {
     const alone = plan([entry("PHYS159", 1, "W1")]);
     const report = validatePlan(alone, catalog);
     expect(report.entryIssues[0].kind).toBe("coreq_missing");
+  });
+
+  it("a one_of corequisite is satisfied by any single alternative", () => {
+    const p = plan([entry("BIOL300", 1, "W1"), entry("MATH103", 1, "W1")]);
+    expect(validatePlan(p, catalog).ok).toBe(true);
+
+    const alone = plan([entry("BIOL300", 1, "W1")]);
+    const report = validatePlan(alone, catalog);
+    expect(report.entryIssues[0].kind).toBe("coreq_missing");
+    expect(report.entryIssues[0].ruleEval).toBeDefined();
+  });
+
+  it("prose-only corequisites produce a warning, not an error", () => {
+    const report = validatePlan(plan([entry("BMEG455", 4, "W1")]), catalog);
+    expect(report.ok).toBe(true);
+    expect(report.entryIssues[0].kind).toBe("coreq_unknown");
+    expect(report.entryIssues[0].severity).toBe("warning");
+  });
+
+  it("an equivalent course satisfies a prerequisite naming its counterpart", () => {
+    const p = plan([entry("AFST256", 1, "W1"), entry("HIST356", 2, "W1")]);
+    expect(validatePlan(p, catalog).ok).toBe(true);
+  });
+
+  it("planning both sides of an equivalency warns about single credit", () => {
+    const p = plan([entry("AFST256", 1, "W1"), entry("HIST256", 2, "W1")]);
+    const report = validatePlan(p, catalog);
+    expect(report.ok).toBe(true); // warning, not error
+    const issue = report.entryIssues.find((i) => i.kind === "equivalent_course")!;
+    expect(issue.severity).toBe("warning");
+    expect(issue.courseId).toBe("HIST256");
+  });
+
+  it("equivalents satisfy course leaves but add nothing to credit pools", () => {
+    const pool = course("HIST400", {
+      prereq: { type: "min_credits", minCredits: 6, from: ["HIST256", "HIST356"] },
+    });
+    const cat = courseMap(afst256, hist256, hist356, pool);
+    // AFST 256 aliases HIST 256 at 0 credits — the pool still needs 6.
+    const p = plan([entry("AFST256", 1, "W1"), entry("HIST400", 2, "W1")]);
+    expect(validatePlan(p, cat).ok).toBe(false);
   });
 
   it("flags duplicates but lets a retake after failure pass", () => {

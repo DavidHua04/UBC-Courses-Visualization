@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCorequisiteIds, parsePrereq } from "./parsePrereq";
+import { parseCourseIdList, parsePrereq } from "./parsePrereq";
 
 describe("parsePrereq", () => {
   it("parses a single course", () => {
@@ -76,11 +76,19 @@ describe("parsePrereq", () => {
   });
 });
 
-describe("parseCorequisiteIds", () => {
+describe("parseCourseIdList", () => {
   it("extracts and dedupes ids", () => {
-    expect(parseCorequisiteIds("PHYS 157 or PHYS 157 and MATH 100")).toEqual([
+    expect(parseCourseIdList("PHYS 157 or PHYS 157 and MATH 100")).toEqual([
       "PHYS157",
       "MATH100",
     ]);
+  });
+
+  it("handles campus-suffixed and short subject codes", () => {
+    expect(parseCourseIdList("AI_V 322.")).toEqual(["AI322"]);
+  });
+
+  it("tolerates missing spaces in bare id lists", () => {
+    expect(parseCourseIdList("BIOL364")).toEqual(["BIOL364"]);
   });
 });

@@ -13,8 +13,10 @@ export function course(id: string, overrides: Partial<Course> = {}): Course {
     description: "",
     prereq: null,
     prereqText: null,
-    coreq: [],
+    coreq: null,
     coreqText: null,
+    equiv: [],
+    equivText: null,
     unlocks: [],
     ...overrides,
   };

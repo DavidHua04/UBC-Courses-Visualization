@@ -9,7 +9,7 @@ import type {
 import { displayId, liteId, liteTitle, slotLabel } from "../engine/types";
 import { evaluateRule } from "../engine/prereq";
 import { computeProgress } from "../engine/progress";
-import { checkEligibility, takenBefore, type CourseMap } from "../engine/validate";
+import { checkEligibility, takenBefore, takenThrough, type CourseMap } from "../engine/validate";
 import { useStore, type InsightTab } from "../state/store";
 import { RuleTree } from "./RuleTree";
 import { AdvisorTab } from "./AdvisorTab";
@@ -133,14 +133,35 @@ function CourseTab({
         )}
       </div>
 
-      {course.coreq.length > 0 && (
+      {(course.coreq || course.coreqText) && (
         <div>
           <SectionLabel>Corequisites — same term or earlier</SectionLabel>
-          <div className="flex flex-wrap gap-1">
-            {course.coreq.map((id) => (
-              <CourseChip key={id} courseId={id} plan={plan} />
-            ))}
-          </div>
+          {course.coreq ? (
+            <RuleTree
+              ev={evaluateRule(course.coreq, takenThrough(plan, slot.year, slot.term, courseMap))}
+              plan={plan}
+            />
+          ) : (
+            <p className="rounded-md border border-judge/40 bg-judge-wash px-2.5 py-2 text-xs leading-relaxed text-ink">
+              <span className="font-semibold text-judge">Your judgment needed: </span>
+              {course.coreqText}
+            </p>
+          )}
+        </div>
+      )}
+
+      {(course.equiv.length > 0 || course.equivText) && (
+        <div>
+          <SectionLabel>Equivalent courses — credit for only one</SectionLabel>
+          {course.equiv.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {course.equiv.map((id) => (
+                <CourseChip key={id} courseId={id} plan={plan} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs leading-relaxed text-ink-soft">{course.equivText}</p>
+          )}
         </div>
       )}
 

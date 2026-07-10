@@ -56,7 +56,9 @@ await page.reload();
 consoleErrors.length = 0;
 
 await step("catalog index loads", async () => {
-  await page.waitForSelector('input[placeholder*="7,269"]', { timeout: 15000 });
+  // Placeholder reads "Search N UBC courses" once the index arrives —
+  // don't pin N, the catalog is re-scraped periodically.
+  await page.waitForSelector('input[placeholder*="UBC courses"]', { timeout: 15000 });
 });
 
 await step("search finds CPSC 110 and adds it to Year 1 Winter 1", async () => {
@@ -86,7 +88,10 @@ await step("moving CPSC 210 to Winter 2 clears the conflict", async () => {
   await page.click(
     'main div.group:has(span.font-mono:text-is("CPSC 210")) button[title="Remove from plan"]',
   );
-  await page.click('button:has(span:text-is("Winter 2"))');
+  // The term header's "+" retargets search-adds; first Winter 2 header is Year 1's.
+  await page.click(
+    'div.rounded-t-lg:has(span:text-is("Winter 2")) button[title*="added from search"]',
+  );
   await page.fill('input[type="search"]', "CPSC 210");
   await page.hover('div:has(> div > div > span:text-is("CPSC 210"))');
   await page.click('button:has-text("+ Add")');

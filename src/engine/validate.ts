@@ -25,35 +25,48 @@ function sortedEntries(plan: Plan): PlanEntry[] {
 }
 
 /**
- * Courses taken strictly before (year, term), as courseId → credits.
- * Anything scheduled and not failed is assumed passed — planning is
- * about the future, so "planned" counts the same as "completed".
+ * Taken map over the entries selected by `included`. Anything scheduled and
+ * not failed is assumed passed — planning is about the future, so "planned"
+ * counts the same as "completed".
  *
  * Generic transfer/prior-credit placeholders (Course.generic) are excluded:
  * they stand for an unspecified course at a dept+year level, so they can't
  * satisfy a prerequisite that names a specific course or credit pool.
+ *
+ * Declared equivalents of each taken course are aliased in at 0 credits:
+ * they satisfy `course` leaves in rule trees (AFST 256 satisfies a rule
+ * naming HIST 256) but never add to min_credits pools — the student earns
+ * those credits only once.
  */
-export function takenBefore(plan: Plan, year: number, term: Term, courses: CourseMap): TakenMap {
+function buildTaken(
+  plan: Plan,
+  courses: CourseMap,
+  included: (e: PlanEntry) => boolean,
+): TakenMap {
   const taken = new Map<string, number>();
+  const aliases = new Set<string>();
   for (const e of plan.entries) {
     if (e.status === "failed") continue;
     const course = courses.get(e.courseId);
     if (course?.generic) continue;
-    if (compareSlots(e.year, e.term, year, term) < 0) {
-      taken.set(e.courseId, e.creditsOverride ?? course?.credits ?? 3);
-    }
+    if (!included(e)) continue;
+    taken.set(e.courseId, e.creditsOverride ?? course?.credits ?? 3);
+    for (const id of course?.equiv ?? []) aliases.add(id);
+  }
+  for (const id of aliases) {
+    if (!taken.has(id)) taken.set(id, 0);
   }
   return taken;
 }
 
-/** Is `courseId` scheduled in the same slot or earlier (and not failed)? */
-function takenByEndOf(plan: Plan, courseId: string, year: number, term: Term): boolean {
-  return plan.entries.some(
-    (e) =>
-      e.courseId === courseId &&
-      e.status !== "failed" &&
-      compareSlots(e.year, e.term, year, term) <= 0,
-  );
+/** Courses taken strictly before (year, term), as courseId → credits. */
+export function takenBefore(plan: Plan, year: number, term: Term, courses: CourseMap): TakenMap {
+  return buildTaken(plan, courses, (e) => compareSlots(e.year, e.term, year, term) < 0);
+}
+
+/** Courses taken in the same term or earlier — the corequisite horizon. */
+export function takenThrough(plan: Plan, year: number, term: Term, courses: CourseMap): TakenMap {
+  return buildTaken(plan, courses, (e) => compareSlots(e.year, e.term, year, term) <= 0);
 }
 
 export function validatePlan(plan: Plan, courses: CourseMap): ValidationReport {
@@ -97,6 +110,21 @@ export function validatePlan(plan: Plan, courses: CourseMap): ValidationReport {
     }
     seen.set(entry.courseId, entry);
 
+    // Equivalent pairs both earn credit only once — worth a warning even
+    // for history, since the registrar allows taking both.
+    for (const eqId of course.equiv) {
+      const eqEntry = seen.get(eqId);
+      if (eqEntry && eqEntry.status !== "failed") {
+        entryIssues.push({
+          kind: "equivalent_course",
+          severity: "warning",
+          entryId: entry.id,
+          courseId: entry.courseId,
+          message: `${displayId(entry.courseId)} and ${displayId(eqId)} are equivalent — credit will be granted for only one of them.`,
+        });
+      }
+    }
+
     // Completed/failed entries are history — prerequisites were already
     // enforced by the registrar; re-checking would only produce noise.
     const isFuture = entry.status === "planned" || entry.status === "in_progress";
@@ -134,16 +162,26 @@ export function validatePlan(plan: Plan, courses: CourseMap): ValidationReport {
       });
     }
 
-    for (const coreqId of course.coreq) {
-      if (!takenByEndOf(plan, coreqId, entry.year, entry.term)) {
+    if (course.coreq) {
+      const ev = evaluateRule(course.coreq, takenThrough(plan, entry.year, entry.term, courses));
+      if (ev.status === "unmet") {
         entryIssues.push({
           kind: "coreq_missing",
           severity: "error",
           entryId: entry.id,
           courseId: entry.courseId,
-          message: `${displayId(entry.courseId)} requires ${displayId(coreqId)} in the same term or earlier.`,
+          message: `${displayId(entry.courseId)} requires ${describeRule(course.coreq)} in the same term or earlier.`,
+          ruleEval: ev,
         });
       }
+    } else if (course.coreqText) {
+      entryIssues.push({
+        kind: "coreq_unknown",
+        severity: "warning",
+        entryId: entry.id,
+        courseId: entry.courseId,
+        message: `${displayId(entry.courseId)} has a corequisite that needs your judgment: “${course.coreqText}”`,
+      });
     }
   }
 

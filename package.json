@@ -8,6 +8,7 @@
     "build": "npm run data && tsc -b && vite build",
     "preview": "vite preview",
     "data": "tsx scripts/build-data.ts",
+    "data:fetch": "tsx scripts/fetch-catalog.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "node scripts/e2e.mjs",

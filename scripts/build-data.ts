@@ -4,31 +4,22 @@
 //   dept/XXXX.json  full Course records per department (lazy-loaded)
 //   programs.json   degree programs that have real requirement specs
 //
+// data/source/catalog.json is produced by `npm run data:fetch`
+// (scripts/fetch-catalog.ts), which scrapes the UBC calendar and splits
+// each course's prose into description / prereqText / coreqText /
+// equivText. All rule parsing happens here, at build time.
+//
 // Run: npm run data
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Course, CourseLite, PrereqRule, Program } from "../src/engine/types";
-import { parsePrereq, parseCorequisiteIds } from "./lib/parsePrereq";
+import type { RawCourse } from "./fetch-catalog";
+import { parsePrereq, parseCourseIdList } from "./lib/parsePrereq";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "data");
-
-// ── Source shapes (as scraped by the original project) ─────────────
-
-interface RawCourse {
-  id: string;
-  dept: string;
-  code: string;
-  title: string;
-  credits: string;
-  description: string | null;
-  prerequisites: PrereqRule | null;
-  prerequisitesRaw?: string | null;
-  corequisites: string[];
-  corequisitesRaw?: string | null;
-}
 
 interface RawProgramsFile {
   faculties: { id: string; name: string; requirements?: unknown[] }[];
@@ -42,22 +33,8 @@ interface RawProgramsFile {
   }[];
 }
 
-// ── Prose extraction ────────────────────────────────────────────────
-
-const PREREQ_PROSE = /Prerequisite:\s*([^]*?)(?=\s*Corequisite:|\s*Equivalency:|$)/i;
-const COREQ_PROSE = /Corequisite:\s*([^]*?)(?=\s*Prerequisite:|\s*Equivalency:|$)/i;
-const NOISE = /\s*This course is not eligible for Credit\/D\/Fail grading\.?/gi;
-
-function extractProse(re: RegExp, text: string | null | undefined): string | null {
-  if (!text) return null;
-  const m = re.exec(text);
-  if (!m) return null;
-  const s = m[1].replace(NOISE, "").replace(/\s+/g, " ").trim();
-  return s || null;
-}
-
 function parseCredits(raw: string, id: string): number {
-  const m = raw.match(/\d+(\.\d+)?/);
+  const m = raw.match(/\d+(\.\d+)?/); // "3-6" (variable credit) → its minimum, 3
   if (!m) {
     console.warn(`  ! unparseable credits "${raw}" for ${id}, defaulting to 3`);
     return 3;
@@ -90,35 +67,20 @@ const rawPrograms: RawProgramsFile = JSON.parse(
   readFileSync(join(root, "data", "source", "programs.json"), "utf8"),
 );
 
-const stats = { existing: 0, reparsed: 0, unparsed: 0, none: 0, coreqAdded: 0 };
+const stats = {
+  prereqParsed: 0,
+  prereqUnparsed: 0,
+  coreqParsed: 0,
+  coreqUnparsed: 0,
+};
 const courses = new Map<string, Course>();
 
 for (const rc of raw) {
-  const description = (rc.description ?? "").replace(NOISE, "").trim();
-  const prose =
-    extractProse(PREREQ_PROSE, rc.description) ?? rc.prerequisitesRaw?.replace(NOISE, "").trim() ?? null;
+  const prereq = parsePrereq(rc.prereqText);
+  if (rc.prereqText) prereq.rule ? stats.prereqParsed++ : stats.prereqUnparsed++;
 
-  let prereq = rc.prerequisites ?? null;
-  if (prereq) {
-    stats.existing++;
-  } else if (prose) {
-    const parsed = parsePrereq(prose);
-    if (parsed.rule) {
-      prereq = parsed.rule;
-      stats.reparsed++;
-    } else {
-      stats.unparsed++;
-    }
-  } else {
-    stats.none++;
-  }
-
-  const coreq = new Set(rc.corequisites ?? []);
-  const coreqText = extractProse(COREQ_PROSE, rc.description) ?? rc.corequisitesRaw ?? null;
-  for (const id of parseCorequisiteIds(coreqText)) {
-    if (!coreq.has(id)) stats.coreqAdded++;
-    coreq.add(id);
-  }
+  const coreq = parsePrereq(rc.coreqText);
+  if (rc.coreqText) coreq.rule ? stats.coreqParsed++ : stats.coreqUnparsed++;
 
   courses.set(rc.id, {
     id: rc.id,
@@ -126,13 +88,41 @@ for (const rc of raw) {
     number: rc.code,
     title: rc.title,
     credits: parseCredits(rc.credits, rc.id),
-    description,
-    prereq,
-    prereqText: prose,
-    coreq: [...coreq].sort(),
-    coreqText,
+    description: rc.description,
+    prereq: prereq.rule,
+    prereqText: rc.prereqText,
+    coreq: coreq.rule,
+    coreqText: rc.coreqText,
+    equiv: parseCourseIdList(rc.equivText), // validated + symmetrized below
+    equivText: rc.equivText,
     unlocks: [], // filled below
   });
+}
+
+// Equivalency edges: keep only ids that exist in the catalog (dead calendar
+// references would render as unclickable chips), never self, and make the
+// relation symmetric — the calendar usually declares both sides, but not
+// always.
+let equivDropped = 0;
+let equivSymmetrized = 0;
+for (const course of courses.values()) {
+  const kept = course.equiv.filter((id) => id !== course.id && courses.has(id));
+  equivDropped += course.equiv.length - kept.length;
+  course.equiv = kept;
+}
+for (const course of courses.values()) {
+  for (const id of course.equiv) {
+    const other = courses.get(id)!;
+    if (!other.equiv.includes(course.id)) {
+      other.equiv.push(course.id);
+      equivSymmetrized++;
+    }
+  }
+}
+let equivEdges = 0;
+for (const course of courses.values()) {
+  course.equiv.sort();
+  equivEdges += course.equiv.length;
 }
 
 // Generic dept+year-level placeholders, one per department per class year,
@@ -158,8 +148,10 @@ for (const dept of depts) {
         "degree requirements (electives, breadth), but does not satisfy any course's specific prerequisites.",
       prereq: null,
       prereqText: null,
-      coreq: [],
+      coreq: null,
       coreqText: null,
+      equiv: [],
+      equivText: null,
       unlocks: [],
       generic: true,
     });
@@ -233,10 +225,10 @@ writeFileSync(join(outDir, "programs.json"), JSON.stringify(programs));
 
 console.log(`Courses: ${courses.size} across ${byDept.size} departments`);
 console.log(`Generic transfer-credit placeholders: ${genericAdded}`);
+console.log(`Prereqs: ${stats.prereqParsed} parsed, ${stats.prereqUnparsed} prose-only`);
+console.log(`Coreqs: ${stats.coreqParsed} parsed, ${stats.coreqUnparsed} prose-only`);
 console.log(
-  `Prereqs: ${stats.existing} pre-parsed, +${stats.reparsed} newly parsed, ` +
-    `${stats.unparsed} prose-only, ${stats.none} without prerequisites`,
+  `Equivalency edges: ${equivEdges} (${equivSymmetrized} symmetrized, ${equivDropped} dropped as unknown/self)`,
 );
-console.log(`Coreq ids added from prose: ${stats.coreqAdded}`);
 console.log(`Unlock edges: ${edges}`);
 console.log(`Programs with requirements: ${programs.map((p) => p.id).join(", ") || "none"}`);

@@ -24,9 +24,16 @@ export interface Course {
   prereq: PrereqRule | null;
   /** Original prerequisite prose, kept for display and as fallback when unparsed. */
   prereqText: string | null;
-  /** Corequisite course ids (must be taken before or concurrently). */
-  coreq: string[];
+  /** Parsed corequisite tree — same rule shape as `prereq`, but satisfiable
+   *  by the same term as well as earlier ones. Null when there is no
+   *  corequisite or the prose was unparseable (then `coreqText` remains). */
+  coreq: PrereqRule | null;
   coreqText: string | null;
+  /** Equivalent course ids ("Equivalency:" in the calendar). Credit is
+   *  granted for only one of them, and taking either side satisfies
+   *  prerequisites that name the other. Symmetrized by the pipeline. */
+  equiv: string[];
+  equivText: string | null;
   /** Courses whose prerequisites reference this course (reverse edges). */
   unlocks: string[];
   /**
@@ -233,7 +240,9 @@ export type IssueKind =
   | "prereq_unmet"
   | "prereq_unknown" // prose exists but was not machine-readable; needs human judgment
   | "coreq_missing"
+  | "coreq_unknown" // corequisite prose that was not machine-readable
   | "duplicate_course"
+  | "equivalent_course" // two planned courses are equivalents — credit for only one
   | "unknown_course"
   | "term_overload";
 

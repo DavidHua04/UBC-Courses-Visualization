@@ -5,8 +5,8 @@
 
 import type { PrereqRule } from "../../src/engine/types";
 
-const COURSE_TOKEN = /\b([A-Z]{2,5})(?:_V|_O)?\s+(\d{3,4}[A-Z]?)\b/g;
-const SINGLE_COURSE_TOKEN = /^([A-Z]{2,5})(?:_V|_O)?\s+(\d{3,4}[A-Z]?)$/;
+const COURSE_TOKEN = /\b([A-Z]{2,5})(?:\s*_[VO])?\s+(\d{3,4}[A-Z]?)\b/g;
+const SINGLE_COURSE_TOKEN = /^([A-Z]{2,5})(?:\s*_[VO])?\s+(\d{3,4}[A-Z]?)$/;
 const LETTERED_GROUP = /\(([a-z])\)/g;
 const CREDIT_PHRASE = /(?:at least\s+)?(\d+)\s+credits?\s+(?:of|from)\s+(.+)/i;
 
@@ -197,7 +197,18 @@ export function parsePrereq(raw: string | null | undefined): ParsedPrereq {
   return { rule, unparsed: rule === null };
 }
 
-export function parseCorequisiteIds(raw: string | null | undefined): string[] {
+// Like COURSE_TOKEN but tolerates a missing space ("BIOL364"), which the
+// calendar's Equivalency clauses sometimes do. Too loose for full prereq
+// prose (any CAPS+digits run would match), fine for bare id lists.
+const LOOSE_COURSE_TOKEN = /\b([A-Z]{2,5})(?:\s*_[VO])?\s*(\d{3,4}[A-Z]?)\b/g;
+
+/** Unique course ids mentioned anywhere in a prose fragment (e.g. an
+ *  "Equivalency: HIST 256" clause), in order of appearance. */
+export function parseCourseIdList(raw: string | null | undefined): string[] {
   if (!raw) return [];
-  return [...new Set(extractCourseIds(cleanRaw(raw)))];
+  const ids: string[] = [];
+  for (const m of raw.matchAll(LOOSE_COURSE_TOKEN)) {
+    ids.push(normalizeCourseId(m[1], m[2]));
+  }
+  return [...new Set(ids)];
 }
